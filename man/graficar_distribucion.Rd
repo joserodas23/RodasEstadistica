@@ -2,7 +2,7 @@
 % Please edit documentation in R/graficar_distribucion.R
 \name{graficar_distribucion}
 \alias{graficar_distribucion}
-\title{Graficar distribuciones estadísticas con áreas de rechazo}
+\title{Graficar distribuciones estadisticas con areas de rechazo}
 \usage{
 graficar_distribucion(
   distribucion = "z",
@@ -11,46 +11,55 @@ graficar_distribucion(
   color_rechazo = "red",
   tamanio_texto = 12,
   gl = NULL,
-  valor_cal = NULL
+  valor_cal = NULL,
+  xlim_personalizado = NULL,
+  num_puntos = 1000
 )
 }
 \arguments{
-\item{distribucion}{Tipo de distribución a graficar, puede ser: "z" (Normal estándar),
+\item{distribucion}{Tipo de distribucion a graficar, puede ser: "z" (Normal estandar),
 "t" (t-Student), "chi" (Chi-cuadrado) o "f" (F de Fisher).}
 
 \item{nivel_confianza}{Nivel de confianza para la prueba (por defecto 0.95).}
 
 \item{tipo_prueba}{Tipo de prueba a realizar: "dos_colas", "una_cola_derecha" o "una_cola_izquierda".
-Para distribuciones Chi-cuadrado y F, siempre se utilizará "una_cola_derecha".}
+Para distribuciones Chi-cuadrado y F, siempre se utilizara "una_cola_derecha".}
 
-\item{color_rechazo}{Color para las áreas de rechazo (por defecto "red").}
+\item{color_rechazo}{Color para las areas de rechazo (por defecto "red").}
 
-\item{tamanio_texto}{Tamaño base del texto en el gráfico (por defecto 12).}
+\item{tamanio_texto}{Tamanio base del texto en el grafico (por defecto 12).}
 
-\item{gl}{Grados de libertad. Para t-Student y Chi-cuadrado debe ser un valor único.
+\item{gl}{Grados de libertad. Para t-Student y Chi-cuadrado debe ser un valor unico.
 Para F, debe ser un vector de dos elementos: c(gl1, gl2).}
 
-\item{valor_cal}{Valor calculado del estadístico para marcar en el gráfico (opcional).}
+\item{valor_cal}{Valor calculado del estadistico para marcar en el grafico (opcional).}
+
+\item{xlim_personalizado}{Limites personalizados para el eje X. Vector de dos elementos c(min, max).}
+
+\item{num_puntos}{Numero de puntos para calcular la curva (mayor precision con mas puntos).}
 }
 \value{
-Un objeto ggplot2 con la distribución graficada.
+Un objeto ggplot2 con la distribucion graficada.
 }
 \description{
-Esta función permite visualizar las distribuciones Normal estándar (Z),
-t-Student, Chi-cuadrado y F de Fisher, marcando las áreas de rechazo según
+Esta funcion permite visualizar las distribuciones Normal estandar (Z),
+t-Student, Chi-cuadrado y F de Fisher, marcando las areas de rechazo segun
 el nivel de confianza y tipo de prueba especificados.
 }
 \examples{
-# Distribución Z (Normal estándar) de dos colas
+# Distribucion Z (Normal estandar) de dos colas
 graficar_distribucion("z", nivel_confianza = 0.95, tipo_prueba = "dos_colas")
 
-# Distribución t-Student con 15 grados de libertad, prueba de una cola derecha
+# Distribucion t-Student con 15 grados de libertad, prueba de una cola derecha
 graficar_distribucion("t", nivel_confianza = 0.90, tipo_prueba = "una_cola_derecha", gl = 15)
 
-# Distribución Chi-cuadrado con 5 grados de libertad
+# Distribucion Chi-cuadrado con 5 grados de libertad
 graficar_distribucion("chi", nivel_confianza = 0.95, gl = 5)
 
-# Distribución F con 5 y 20 grados de libertad, marcando un valor calculado
+# Distribucion F con 5 y 20 grados de libertad, marcando un valor calculado
 graficar_distribucion("f", nivel_confianza = 0.95, gl = c(5, 20), valor_cal = 2.5)
+
+# Usar limites personalizados para el eje X
+graficar_distribucion("chi", nivel_confianza = 0.95, gl = 1, xlim_personalizado = c(0, 8))
 
 }
