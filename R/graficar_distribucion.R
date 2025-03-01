@@ -50,9 +50,9 @@ graficar_distribucion <- function(distribucion = "z",
                                   num_puntos = 1000) {
 
   # Validar el tipo de prueba
-  tipos_validos <- c("dos_colas", "una_cola_derecha", "una_cola_izquierda")
+  tipos_validos <- c("dos_colas", "una_cola_derecha", "una_cola_izquierda", "intervalo_confianza")
   if (!tipo_prueba %in% tipos_validos) {
-    stop("Tipo de prueba no valido. Debe ser: 'dos_colas', 'una_cola_derecha' o 'una_cola_izquierda'")
+    stop("Tipo de prueba no valido. Debe ser: 'dos_colas', 'una_cola_derecha', 'una_cola_izquierda' o 'intervalo_confianza'")
   }
 
   # Configurar distribucion
@@ -98,9 +98,10 @@ graficar_distribucion <- function(distribucion = "z",
 
            titulo <- paste("Distribucion Chi-cuadrado (gl =", gl, ")")
            distribucion_una_cola <- TRUE
-           # Para Chi-cuadrado, forzar a una cola derecha
-           if (tipo_prueba != "una_cola_derecha") {
-             message("Nota: La distribucion Chi-cuadrado solo tiene cola derecha. Se ha ajustado automaticamente.")
+           # Para Chi-cuadrado, forzar a una cola derecha para pruebas de hipotesis
+           # Pero permitir intervalo_confianza
+           if (tipo_prueba != "una_cola_derecha" && tipo_prueba != "intervalo_confianza") {
+             message("Nota: Para pruebas de hipótesis, la distribución Chi-cuadrado solo tiene cola derecha. Se ha ajustado automáticamente.")
              tipo_prueba <- "una_cola_derecha"
            }
          },
@@ -122,9 +123,10 @@ graficar_distribucion <- function(distribucion = "z",
 
            titulo <- paste("Distribucion F (gl1 =", gl[1], ", gl2 =", gl[2], ")")
            distribucion_una_cola <- TRUE
-           # Para F, forzar a una cola derecha
-           if (tipo_prueba != "una_cola_derecha") {
-             message("Nota: La distribucion F de Fisher solo tiene cola derecha. Se ha ajustado automaticamente.")
+           # Para F, forzar a una cola derecha para pruebas de hipótesis
+           # Pero permitir intervalo_confianza
+           if (tipo_prueba != "una_cola_derecha" && tipo_prueba != "intervalo_confianza") {
+             message("Nota: Para pruebas de hipótesis, la distribución F de Fisher solo tiene cola derecha. Se ha ajustado automáticamente.")
              tipo_prueba <- "una_cola_derecha"
            }
          },
@@ -145,9 +147,22 @@ graficar_distribucion <- function(distribucion = "z",
     } else if(tipo_prueba == "una_cola_derecha") {
       valor_critico <- round(fun_cuantil(1 - alpha), 5)
       valores_criticos <- valor_critico
-    } else {
+    } else if(tipo_prueba == "una_cola_izquierda") {
       valor_critico <- round(fun_cuantil(alpha), 5)
       valores_criticos <- valor_critico
+    } else if(tipo_prueba == "intervalo_confianza") {
+      # Para intervalo de confianza, calcular ambos límites
+      if(distribucion_una_cola) {
+        # Para distribuciones Chi-cuadrado y F
+        limite_inferior <- round(fun_cuantil(alpha/2), 5)
+        limite_superior <- round(fun_cuantil(1 - alpha/2), 5)
+        valor_critico <- limite_superior  # Para mantener compatibilidad
+        valores_criticos <- c(limite_inferior, limite_superior)
+      } else {
+        # Para otras distribuciones
+        valor_critico <- round(fun_cuantil(1 - alpha/2), 5)
+        valores_criticos <- c(-valor_critico, valor_critico)
+      }
     }
   }, error = function(e) {
     stop(paste("Error al calcular valores criticos:", e$message))
@@ -241,8 +256,22 @@ graficar_distribucion <- function(distribucion = "z",
     p <- safe_fill_area(p, valor_critico, xlim[2], fun_densidad, color_rechazo)
   } else if(tipo_prueba == "una_cola_derecha") {
     p <- safe_fill_area(p, valor_critico, xlim[2], fun_densidad, color_rechazo)
-  } else {
+  } else if(tipo_prueba == "una_cola_izquierda") {
     p <- safe_fill_area(p, xlim[1], valor_critico, fun_densidad, color_rechazo)
+  } else if(tipo_prueba == "intervalo_confianza") {
+    # Para intervalo de confianza, resaltar el área de confianza (complemento del rechazo)
+    if(distribucion_una_cola) {
+      # Para Chi-cuadrado y F, resaltar el área entre los límites
+      p <- safe_fill_area(p, valores_criticos[1], valores_criticos[2], fun_densidad, "lightblue")
+      # Y marcar las áreas de rechazo
+      p <- safe_fill_area(p, 0, valores_criticos[1], fun_densidad, color_rechazo)
+      p <- safe_fill_area(p, valores_criticos[2], xlim[2], fun_densidad, color_rechazo)
+    } else {
+      # Para distribuciones simétricas
+      p <- safe_fill_area(p, -valor_critico, valor_critico, fun_densidad, "lightblue")
+      p <- safe_fill_area(p, xlim[1], -valor_critico, fun_densidad, color_rechazo)
+      p <- safe_fill_area(p, valor_critico, xlim[2], fun_densidad, color_rechazo)
+    }
   }
 
   # Agregar lineas verticales para los valores criticos
@@ -250,166 +279,14 @@ graficar_distribucion <- function(distribucion = "z",
                                linetype = "dashed",
                                linewidth = 0.8)
 
-  # Mejorar la presentacion del valor observado si se proporciona
-  if (!is.null(valor_cal)) {
-    p <- p + ggplot2::geom_vline(xintercept = valor_cal,
-                                 color = "blue",
-                                 linewidth = 0.8)
+  # Crear breaks inteligentes para el eje X
+  breaks_x <- .crear_breaks_inteligentes(xlim, valor_critico, valor_cal, tipo_prueba, distribucion_una_cola, distribucion, gl)
 
-    # Mejorar posicionamiento de etiquetas
-    if (distribucion_una_cola) {
-      # Calcular una posicion vertical proporcional al maximo, pero limitada
-      y_position <- min(y_max * 0.5, y_max * 0.8)
-
-      # Estrategia de posicionamiento mejorada para diferentes casos
-      if (tolower(distribucion) == "chi" && gl <= 2) {
-        # Para Chi-cuadrado con pocos gl, usar posicionamiento especial
-        label_position <- max(valor_cal + 0.2, valor_cal * 1.2)
-        label_position <- min(label_position, xlim[2] * 0.8) # Evitar salirse del limite
-
-        # Verificar que la posicion esta dentro de los limites del grafico
-        if (label_position >= xlim[1] && label_position <= xlim[2] &&
-            y_position > 0 && y_position <= y_max * 1.1) {
-          p <- p + ggplot2::annotate("label",
-                                     x = label_position,
-                                     y = y_position,
-                                     label = paste("Cal. =", round(valor_cal, 3)),
-                                     color = "blue",
-                                     fill = "white",
-                                     alpha = 0.7,
-                                     hjust = 0,
-                                     size = 3.5)
-        }
-      } else if (tolower(distribucion) == "f" && gl[1] <= 2) {
-        # Para F con pocos gl
-        label_position <- max(valor_cal + 0.2, valor_cal * 1.2)
-        label_position <- min(label_position, xlim[2] * 0.8)
-
-        # Verificar que la posicion esta dentro de los limites del grafico
-        if (label_position >= xlim[1] && label_position <= xlim[2] &&
-            y_position > 0 && y_position <= y_max * 1.1) {
-          p <- p + ggplot2::annotate("label",
-                                     x = label_position,
-                                     y = y_position,
-                                     label = paste("Cal. =", round(valor_cal, 3)),
-                                     color = "blue",
-                                     fill = "white",
-                                     alpha = 0.7,
-                                     hjust = 0,
-                                     size = 3.5)
-        }
-      } else {
-        # Para otros casos de distribuciones de una cola
-        p <- p + ggplot2::annotate("text",
-                                   x = valor_cal,
-                                   y = y_position,
-                                   label = paste("Cal. =", round(valor_cal, 3)),
-                                   color = "blue",
-                                   angle = 0,
-                                   hjust = -0.1,
-                                   size = 3.5)
-      }
-    } else {
-      # Para Z y t-Student, posicionamiento adaptativo
-      y_position <- y_max * 0.8
-      hjust_value <- ifelse(valor_cal > 0, -0.1, 1.1)
-
-      # Si el valor esta cerca del centro, colocar la etiqueta arriba
-      if (abs(valor_cal) < 0.5) {
-        y_position <- y_max * 0.9
-        hjust_value <- 0.5
-      }
-
-      p <- p + ggplot2::annotate("text",
-                                 x = valor_cal,
-                                 y = y_position,
-                                 label = paste("Cal. =", round(valor_cal, 3)),
-                                 color = "blue",
-                                 angle = 0,
-                                 hjust = hjust_value,
-                                 size = 3.5)
-    }
-  }
-
-  # Funcion auxiliar para crear breaks mas inteligentes
-  crear_breaks_inteligentes <- function(xlim, valor_critico, valor_cal = NULL, tipo_prueba, dist_una_cola) {
-    if (dist_una_cola) {
-      # Para chi y F - crear breaks mas informativos
-      n_breaks <- 5
-
-      # Para distribuciones con gl bajos, incluir mas puntos cerca del origen
-      is_low_gl_case <- (tolower(distribucion) == "chi" && gl <= 2) ||
-        (tolower(distribucion) == "f" && gl[1] <= 2)
-
-      if (is_low_gl_case) {
-        # Breaks no uniformes con mas detalle en valores bajos
-        base_breaks <- c(0, 1, valor_critico, round(xlim[2]/2, 2), round(xlim[2], 2))
-
-        # Si valor_cal esta definido, incluirlo
-        if (!is.null(valor_cal)) {
-          base_breaks <- c(base_breaks, round(valor_cal, 3))
-        }
-
-        breaks_x <- sort(unique(base_breaks))
-      } else {
-        breaks_x <- round(seq(0, xlim[2], length.out = n_breaks), 2)
-        # Asegurar que el valor critico esta incluido
-        breaks_x <- sort(unique(c(breaks_x, round(valor_critico, 2))))
-
-        # Si valor_cal esta definido, incluirlo
-        if (!is.null(valor_cal)) {
-          breaks_x <- sort(unique(c(breaks_x, round(valor_cal, 2))))
-        }
-      }
-    } else if(tipo_prueba == "dos_colas") {
-      n_breaks <- 7
-      breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
-      # Asegurar que los valores criticos y el cero estan incluidos
-      breaks_x <- sort(unique(c(breaks_x, round(-valor_critico, 2), 0, round(valor_critico, 2))))
-
-      # Si valor_cal esta definido, incluirlo
-      if (!is.null(valor_cal)) {
-        breaks_x <- sort(unique(c(breaks_x, round(valor_cal, 2))))
-      }
-    } else if(tipo_prueba == "una_cola_derecha") {
-      n_breaks <- 5
-      breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
-      breaks_x <- sort(unique(c(breaks_x, 0, round(valor_critico, 2))))
-
-      # Si valor_cal esta definido, incluirlo
-      if (!is.null(valor_cal)) {
-        breaks_x <- sort(unique(c(breaks_x, round(valor_cal, 2))))
-      }
-    } else {
-      n_breaks <- 5
-      breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
-      breaks_x <- sort(unique(c(breaks_x, round(valor_critico, 2), 0)))
-
-      # Si valor_cal esta definido, incluirlo
-      if (!is.null(valor_cal)) {
-        breaks_x <- sort(unique(c(breaks_x, round(valor_cal, 2))))
-      }
-    }
-
-    # Eliminar breaks muy cercanos
-    if (length(breaks_x) > 2) {
-      breaks_x_ordenados <- sort(breaks_x)
-      diffs <- diff(breaks_x_ordenados)
-      min_diff <- min(abs(xlim[2] - xlim[1]) / 10, 0.2)
-
-      keep <- c(TRUE, diffs > min_diff)
-      breaks_x <- breaks_x_ordenados[keep]
-    }
-
-    return(breaks_x)
-  }
-
-  # Crear breaks inteligentes
-  breaks_x <- crear_breaks_inteligentes(xlim, valor_critico, valor_cal, tipo_prueba, distribucion_una_cola)
-
-  # Modificar subtitulo para distribuciones de una cola
+  # Modificar subtitulo según tipo de prueba
   subtitulo <- paste("Nivel de confianza:", nivel_confianza * 100, "%")
-  if (!distribucion_una_cola) {
+  if (tipo_prueba == "intervalo_confianza") {
+    subtitulo <- paste(subtitulo, "- Intervalo de Confianza")
+  } else if (!distribucion_una_cola) {
     subtitulo <- paste(subtitulo, "-", gsub("_", " ", tipo_prueba))
   } else {
     subtitulo <- paste(subtitulo, "- una cola derecha")
@@ -437,7 +314,11 @@ graficar_distribucion <- function(distribucion = "z",
                   y = "Densidad",
                   caption = "RDS") +
 
-    ggplot2::scale_x_continuous(breaks = breaks_x, labels = function(x) format(x, nsmall = 2)) +
+    # Formato mejorado para el eje X: garantizar 2 decimales exactos
+    ggplot2::scale_x_continuous(
+      breaks = breaks_x,
+      labels = function(x) sprintf("%.2f", x)
+    ) +
 
     # Ajustar el eje Y con limites apropiados y evitar advertencias
     ggplot2::scale_y_continuous(
@@ -457,6 +338,120 @@ graficar_distribucion <- function(distribucion = "z",
       plot.margin = ggplot2::margin(20, 20, 20, 20),
       plot.caption = ggplot2::element_text(size = 8, color = "gray50", hjust = 1))
 
+  # Mejorar posicionamiento del valor calculado (Cal.) si se proporciona
+  if (!is.null(valor_cal)) {
+    # Agregar primero la línea vertical para el valor calculado
+    p <- p + ggplot2::geom_vline(xintercept = valor_cal,
+                                 color = "blue",
+                                 linewidth = 0.8)
+
+    # Función mejorada para posicionar la etiqueta Cal.
+    agregar_etiqueta_cal <- function() {
+      # Calcular una mejor posición Y para evitar solapamiento con el eje
+      y_buffer <- y_max * 0.1  # Buffer de espacio en la parte inferior
+      y_height <- y_max * 0.12  # Altura para la etiqueta
+
+      if (distribucion_una_cola) {
+        if (tolower(distribucion) == "chi" || tolower(distribucion) == "f") {
+          # Para Chi-cuadrado o F, usar una etiqueta con fondo blanco
+          p <- p + ggplot2::annotate(
+            "label",
+            x = min(max(valor_cal * 1.05, valor_cal + 0.1), xlim[2] * 0.8),  # Más cerca de la línea
+            y = y_max * 0.65,  # Posición vertical ajustada
+            label = paste("Cal. =", sprintf("%.2f", valor_cal)),  # Formato con 2 decimales exactos
+            color = "blue",
+            fill = "white",
+            alpha = 0.8,
+            hjust = 0,
+            size = 4.5  # Letra más grande
+          )
+        } else {
+          # Para otros casos de distribuciones de una cola
+          p <- p + ggplot2::annotate(
+            "label",
+            x = valor_cal,
+            y = y_max * 0.65,  # Posición vertical ajustada
+            label = paste("Cal. =", sprintf("%.2f", valor_cal)),
+            color = "blue",
+            fill = "white",
+            alpha = 0.8,
+            hjust = -0.05,  # Más cerca de la línea
+            size = 4.5  # Letra más grande
+          )
+        }
+      } else {
+        # Para Z y t-Student
+        # Ajustar horizontalmente según el valor
+        hjust_value <- ifelse(valor_cal > 0, -0.05, 1.05)  # Más cerca de la línea
+        if (abs(valor_cal) < 0.5) hjust_value <- 0.5
+
+        # Usar label en lugar de text para mejorar legibilidad
+        p <- p + ggplot2::annotate(
+          "label",
+          x = valor_cal,
+          y = y_max * 0.65,  # Posición vertical ajustada
+          label = paste("Cal. =", sprintf("%.2f", valor_cal)),
+          color = "blue",
+          fill = "white",
+          alpha = 0.8,
+          hjust = hjust_value,
+          size = 4.5  # Letra más grande
+        )
+      }
+      return(p)
+    }
+
+    # Aplicar el posicionamiento mejorado de la etiqueta
+    p <- agregar_etiqueta_cal()
+  }
+
   # Devolver el grafico
   return(p)
+}
+
+# Función auxiliar para crear breaks más inteligentes
+.crear_breaks_inteligentes <- function(xlim, valor_critico, valor_cal = NULL, tipo_prueba, dist_una_cola, distribucion, gl) {
+  if (dist_una_cola) {
+    # Para chi y F - crear breaks más informativos
+    n_breaks <- 5
+
+    # Para distribuciones con gl bajos, incluir más puntos cerca del origen
+    is_low_gl_case <- (tolower(distribucion) == "chi" && gl <= 2) ||
+      (tolower(distribucion) == "f" && gl[1] <= 2)
+
+    if (is_low_gl_case) {
+      # Breaks no uniformes con más detalle en valores bajos
+      base_breaks <- c(0, 1, valor_critico, round(xlim[2]/2, 1), round(xlim[2], 1))
+      breaks_x <- sort(unique(base_breaks))
+    } else {
+      breaks_x <- round(seq(0, xlim[2], length.out = n_breaks), 2)
+      # Asegurar que el valor crítico está incluido
+      breaks_x <- sort(unique(c(breaks_x, round(valor_critico, 2))))
+    }
+  } else if(tipo_prueba == "dos_colas") {
+    n_breaks <- 7
+    breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
+    # Asegurar que los valores críticos y el cero están incluidos
+    breaks_x <- sort(unique(c(breaks_x, round(-valor_critico, 2), 0, round(valor_critico, 2))))
+  } else if(tipo_prueba == "una_cola_derecha") {
+    n_breaks <- 5
+    breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
+    breaks_x <- sort(unique(c(breaks_x, 0, round(valor_critico, 2))))
+  } else {
+    n_breaks <- 5
+    breaks_x <- round(seq(xlim[1], xlim[2], length.out = n_breaks), 2)
+    breaks_x <- sort(unique(c(breaks_x, round(valor_critico, 2), 0)))
+  }
+
+  # Eliminar breaks muy cercanos
+  if (length(breaks_x) > 2) {
+    breaks_x_ordenados <- sort(breaks_x)
+    diffs <- diff(breaks_x_ordenados)
+    min_diff <- min(abs(xlim[2] - xlim[1]) / 12, 0.15)  # Umbral reducido para permitir más breaks
+
+    keep <- c(TRUE, diffs > min_diff)
+    breaks_x <- breaks_x_ordenados[keep]
+  }
+
+  return(breaks_x)
 }
