@@ -2,7 +2,7 @@
 % Please edit documentation in R/graficar_distribucion.R
 \name{graficar_distribucion}
 \alias{graficar_distribucion}
-\title{Graficar distribuciones estadisticas con areas de rechazo}
+\title{Grafica una distribucion estadistica con areas de rechazo y valores criticos}
 \usage{
 graficar_distribucion(
   distribucion = "z",
@@ -13,53 +13,44 @@ graficar_distribucion(
   gl = NULL,
   valor_cal = NULL,
   xlim_personalizado = NULL,
-  num_puntos = 1000
+  num_puntos = 1000,
+  rotar_etiquetas_x = TRUE,
+  tamanio_etiqueta_cal = 3.5
 )
 }
 \arguments{
-\item{distribucion}{Tipo de distribucion a graficar, puede ser: "z" (Normal estandar),
-"t" (t-Student), "chi" (Chi-cuadrado) o "f" (F de Fisher).}
+\item{distribucion}{Tipo de distribucion: "z", "t", "chi" o "f"}
 
-\item{nivel_confianza}{Nivel de confianza para la prueba (por defecto 0.95).}
+\item{nivel_confianza}{Valor entre 0 y 1 que representa el nivel de confianza}
 
-\item{tipo_prueba}{Tipo de prueba a realizar: "dos_colas", "una_cola_derecha" o "una_cola_izquierda".
-Para distribuciones Chi-cuadrado y F, siempre se utilizara "una_cola_derecha".}
+\item{tipo_prueba}{Tipo de prueba: "dos_colas", "una_cola_derecha", "una_cola_izquierda" o "intervalo_confianza"}
 
-\item{color_rechazo}{Color para las areas de rechazo (por defecto "red").}
+\item{color_rechazo}{Color para las areas de rechazo}
 
-\item{tamanio_texto}{Tamanio base del texto en el grafico (por defecto 12).}
+\item{tamanio_texto}{Tamanio de texto base para el grafico}
 
-\item{gl}{Grados de libertad. Para t-Student y Chi-cuadrado debe ser un valor unico.
-Para F, debe ser un vector de dos elementos: c(gl1, gl2).}
+\item{gl}{Grados de libertad: un valor para t y chi, y vector c(gl1, gl2) para F}
 
-\item{valor_cal}{Valor calculado del estadistico para marcar en el grafico (opcional).}
+\item{valor_cal}{Valor calculado para marcar en el grafico (opcional)}
 
-\item{xlim_personalizado}{Limites personalizados para el eje X. Vector de dos elementos c(min, max).}
+\item{xlim_personalizado}{Vector c(min, max) para definir limites personalizados en eje X}
 
-\item{num_puntos}{Numero de puntos para calcular la curva (mayor precision con mas puntos).}
+\item{num_puntos}{Numero de puntos para generar la curva}
+
+\item{rotar_etiquetas_x}{Logico: si TRUE, rota las etiquetas del eje X para evitar sobreposicion}
+
+\item{tamanio_etiqueta_cal}{Tamanio de la etiqueta del valor calculado}
 }
 \value{
-Un objeto ggplot2 con la distribucion graficada.
+Un objeto ggplot con el grafico de la distribucion
 }
 \description{
-Esta funcion permite visualizar las distribuciones Normal estandar (Z),
-t-Student, Chi-cuadrado y F de Fisher, marcando las areas de rechazo segun
-el nivel de confianza y tipo de prueba especificados.
+Grafica una distribucion estadistica con areas de rechazo y valores criticos
 }
 \examples{
-# Distribucion Z (Normal estandar) de dos colas
+# Distribucion Z, dos colas, 95\% de confianza
 graficar_distribucion("z", nivel_confianza = 0.95, tipo_prueba = "dos_colas")
 
-# Distribucion t-Student con 15 grados de libertad, prueba de una cola derecha
-graficar_distribucion("t", nivel_confianza = 0.90, tipo_prueba = "una_cola_derecha", gl = 15)
-
-# Distribucion Chi-cuadrado con 5 grados de libertad
-graficar_distribucion("chi", nivel_confianza = 0.95, gl = 5)
-
-# Distribucion F con 5 y 20 grados de libertad, marcando un valor calculado
-graficar_distribucion("f", nivel_confianza = 0.95, gl = c(5, 20), valor_cal = 2.5)
-
-# Usar limites personalizados para el eje X
-graficar_distribucion("chi", nivel_confianza = 0.95, gl = 1, xlim_personalizado = c(0, 8))
-
+# Distribucion t-Student con 10 grados de libertad y valor calculado
+graficar_distribucion("t", gl = 10, valor_cal = 2.5, tipo_prueba = "una_cola_derecha")
 }
