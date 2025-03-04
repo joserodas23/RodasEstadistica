@@ -29,7 +29,7 @@ graficar_distribucion <- function(distribucion = "z",
                                   gl = NULL,
                                   valor_cal = NULL,
                                   xlim_personalizado = NULL,
-                                  num_puntos = 1000,
+                                  num_puntos = 1500,
                                   rotar_etiquetas_x = TRUE,
                                   tamanio_etiqueta_cal = 3.5) {
 
@@ -91,39 +91,26 @@ graficar_distribucion <- function(distribucion = "z",
            }
          },
 
-         #Configuración específica para distribución F (con correcciones)
-
+         #Configuración específica para distribución F (con mejoras para GL altos)
          "f" = {
            if (is.null(gl)) stop("Debe especificar gl para distribucion F")
            if (length(gl) != 2) stop("Para distribucion F, gl debe ser un vector con dos valores: c(gl1, gl2)")
            if (any(gl <= 0)) stop("Los grados de libertad deben ser positivos")
 
-           # Función de densidad normal para casos generales
-           base_fun_densidad <- function(x) df(x, df1 = gl[1], df2 = gl[2])
-
-           # Casos especiales para distribución F con ciertos grados de libertad
-           if ((gl[1] > 20 && gl[1] < 40) && (gl[2] > 20 && gl[2] < 40)) {
-             # Versión mejorada para los casos problemáticos (gl1 entre 20-40, gl2 entre 20-40)
-             fun_densidad <- function(x) {
-               # Calculamos la densidad normal
-               densidad <- base_fun_densidad(x)
-               # Devolver la densidad directamente
-               return(densidad)
-             }
-           } else {
-             # Función de densidad estándar para otros casos
-             fun_densidad <- base_fun_densidad
-           }
-
+           # Función de densidad estándar para todos los casos
+           fun_densidad <- function(x) df(x, df1 = gl[1], df2 = gl[2])
            fun_cuantil <- function(p) qf(p, df1 = gl[1], df2 = gl[2])
 
            # Limites mejorados para F
            if (is.null(xlim_personalizado)) {
-             # Ajuste específico para el caso problemático
-             if ((gl[1] > 20 && gl[1] < 40) && (gl[2] > 20 && gl[2] < 40)) {
-               max_val <- max(5, qf(0.999, gl[1], gl[2]))
-               xlim <- c(0, max_val)
+             # Para valores altos de gl (>30), la distribución se vuelve más concentrada
+             if (gl[1] >= 30 && gl[2] >= 30) {
+               # Calcular un valor máximo apropiado basado en el valor crítico al 99.9%
+               vc_99 <- qf(0.999, gl[1], gl[2])
+               # Usar un rango más estrecho para visualizar mejor
+               xlim <- c(0, min(5, max(2, vc_99 * 1.5)))
              } else {
+               # Para otros casos, usar un rango suficientemente amplio
                max_val <- max(5, qf(0.999, gl[1], gl[2]))
                xlim <- c(0, max_val)
              }
@@ -178,42 +165,81 @@ graficar_distribucion <- function(distribucion = "z",
     stop(paste("Error al calcular valores criticos:", e$message))
   })
 
-  # Crear datos para la curva con distribución mejorada de puntos
+  # Crear datos para la curva con distribución optimizada de puntos
   points_count <- num_puntos
 
-  # Manejar específicamente la distribución F problemática
-  if (tolower(distribucion) == "f" && (gl[1] > 20 && gl[1] < 40) && (gl[2] > 20 && gl[2] < 40)) {
-    # Caso especial para F con gl1 y gl2 en rango problemático (20-40)
+  # Manejo especial para distribución F: enfoque mejorado
+  if (tolower(distribucion) == "f") {
+    # Aumento de precisión para distribuciones F
+    # Crear puntos con distribución no uniforme para capturar mejor la forma
 
     # Estimar el modo (pico) de la distribución F
-    modo_aprox <- max(0.1, (gl[2] - 2) / (gl[2]) * (gl[1]) / (gl[1] + 2))
+    if (gl[2] > 2) {
+      modo_aprox <- (gl[2] - 2) / gl[2] * gl[1] / (gl[1] + 2)
+    } else {
+      modo_aprox <- 0.1  # Valor aproximado para gl2 <= 2
+    }
+
+    # Asegurar que modo_aprox sea positivo y válido
+    modo_aprox <- max(0.1, modo_aprox)
+
+    # Calcular la media y la varianza aproximadas para distribución F
+    media_f <- ifelse(gl[2] > 2, gl[2] / (gl[2] - 2), 1)
+    # Para gl altos, la distribución se vuelve más concentrada
+    es_alta_precision <- gl[1] >= 30 && gl[2] >= 30
 
     # Preparar valores importantes para considerar en el muestreo
     valor_critico_f <- ifelse(length(valores_criticos) > 0, valores_criticos[1], 0)
     cal_val_f <- ifelse(!is.null(valor_cal), valor_cal, 0)
 
-    # Crear puntos con mayor densidad alrededor de áreas críticas
-    puntos_bajo <- seq(0, modo_aprox * 0.9, length.out = floor(points_count * 0.15))
-    puntos_pico <- seq(modo_aprox * 0.9, modo_aprox * 1.1, length.out = floor(points_count * 0.25))
+    # Determinar rango para la densidad de puntos
+    if (es_alta_precision) {
+      # Para gl altos, concentrar puntos en un rango más estrecho
+      rango_bajo <- max(0.001, media_f * 0.5)
+      rango_alto <- min(xlim[2], media_f * 2)
 
-    # Zona crítica - donde está el valor calculado y el valor crítico
-    zona_media_min <- min(modo_aprox * 1.1, max(0.5, valor_critico_f * 0.8))
-    zona_media_max <- max(valor_critico_f * 1.2, cal_val_f * 1.2)
-    puntos_medios <- seq(zona_media_min, zona_media_max, length.out = floor(points_count * 0.4))
+      # Crear secuencias de puntos con más densidad alrededor del modo y valores críticos
+      n_antes_modo <- floor(points_count * 0.3)
+      n_alrededor_modo <- floor(points_count * 0.4)
+      n_despues_modo <- points_count - n_antes_modo - n_alrededor_modo
 
-    # Zona alta - hasta el fin del gráfico
-    puntos_altos <- seq(zona_media_max, xlim[2], length.out = floor(points_count * 0.2))
+      # Puntos antes del modo
+      x_antes <- seq(0, modo_aprox * 0.98, length.out = n_antes_modo)
 
-    # Asegurar puntos exactos en valores importantes
-    puntos_exactos <- c(
-      modo_aprox,
-      valor_critico_f,
-      ifelse(!is.null(valor_cal), valor_cal, NA)
-    )
-    puntos_exactos <- puntos_exactos[!is.na(puntos_exactos)]
+      # Puntos alrededor del modo (mayor densidad)
+      x_modo <- seq(modo_aprox * 0.98, modo_aprox * 1.5, length.out = n_alrededor_modo)
 
-    # Combinar todos los puntos y eliminar duplicados
-    x <- sort(unique(c(puntos_bajo, puntos_pico, puntos_medios, puntos_altos, puntos_exactos)))
+      # Puntos después del modo hasta el final
+      x_despues <- seq(modo_aprox * 1.5, xlim[2], length.out = n_despues_modo)
+
+      # Agregar puntos exactos en los valores críticos y calculado
+      x_exactos <- c(modo_aprox, valor_critico_f)
+      if (!is.null(valor_cal)) {
+        x_exactos <- c(x_exactos, valor_cal)
+      }
+
+      # Combinar todos los puntos
+      x <- sort(unique(c(0, x_antes, x_modo, x_despues, x_exactos)))
+    } else {
+      # Para casos generales, usar la distribución de puntos más genérica
+      n_inicio <- floor(points_count * 0.25)
+      n_medio <- floor(points_count * 0.5)
+      n_fin <- points_count - n_inicio - n_medio
+
+      # Crear secuencias de puntos de forma no uniforme
+      x_inicio <- seq(0, modo_aprox * 0.9, length.out = n_inicio)
+      x_medio <- seq(modo_aprox * 0.9, max(modo_aprox * 1.5, valor_critico_f * 1.1), length.out = n_medio)
+      x_fin <- seq(max(modo_aprox * 1.5, valor_critico_f * 1.1), xlim[2], length.out = n_fin)
+
+      # Agregar puntos exactos en los valores importantes
+      x_exactos <- c(modo_aprox, valor_critico_f)
+      if (!is.null(valor_cal)) {
+        x_exactos <- c(x_exactos, valor_cal)
+      }
+
+      # Combinar todos los puntos
+      x <- sort(unique(c(0, x_inicio, x_medio, x_fin, x_exactos)))
+    }
   }
   # Manejar distribuciones de una cola con pocos grados de libertad
   else if (distribucion_una_cola && ((tolower(distribucion) == "chi" && gl <= 2) ||
@@ -247,27 +273,6 @@ graficar_distribucion <- function(distribucion = "z",
     })
     return(result)
   })
-
-  # Suavizado especial para distribución F problemática
-  if (tolower(distribucion) == "f" && (gl[1] > 20 && gl[1] < 40) && (gl[2] > 20 && gl[2] < 40)) {
-    # Ordenar los valores por x para el suavizado
-    indices_ordenados <- order(x)
-    x_ordenado <- x[indices_ordenados]
-    y_ordenado <- y[indices_ordenados]
-
-    # Suavizado con ventana móvil
-    ventana <- 9  # Tamaño de la ventana (ajustar según necesidad)
-    y_suavizado <- y_ordenado
-
-    for (i in 1:length(y_ordenado)) {
-      inicio <- max(1, i - floor(ventana/2))
-      fin <- min(length(y_ordenado), i + floor(ventana/2))
-      y_suavizado[i] <- mean(y_ordenado[inicio:fin], na.rm = TRUE)
-    }
-
-    # Reemplazar valores originales por suavizados
-    y[indices_ordenados] <- y_suavizado
-  }
 
   # Filtrar valores NA o infinitos
   valid_indices <- !is.na(y) & is.finite(y)
@@ -367,9 +372,10 @@ graficar_distribucion <- function(distribucion = "z",
     } else if (tolower(dist) == "f" && gl_value[1] <= 2) {
       # Limitar el eje Y para distribuciones F con picos muy altos
       c(0, min(y_max * 1.2, fun_densidad(0.1) * 1.5))
-    } else if (tolower(dist) == "f" && (gl_value[1] > 20 && gl_value[1] < 40)) {
-      # Limitar el eje Y para distribuciones F problemáticas
-      c(0, y_max * 1.1)
+    } else if (tolower(dist) == "f" && gl_value[1] >= 30 && gl_value[2] >= 30) {
+      # Limitar el eje Y para distribuciones F con gl altos
+      # Proporcionar un poco más de espacio encima del máximo para la etiqueta
+      c(0, y_max * 1.3)
     } else {
       # Sin limites para otros casos
       NULL
@@ -549,7 +555,7 @@ graficar_distribucion <- function(distribucion = "z",
   return(p)
 }
 
-# Funcion completamente rediseñada para crear breaks mas inteligentes
+# Funcion auxiliar para crear breaks inteligentes
 .crear_breaks_inteligentes_v2 <- function(xlim, valor_critico, valor_cal = NULL, tipo_prueba, dist_una_cola, distribucion, gl, valores_criticos) {
   # Enfoque minimalista: mostrar solo los puntos esenciales
   # Para distribucion Z o t con dos colas (caso mas comun), mostrar solo estos 5 puntos:
@@ -671,4 +677,3 @@ graficar_distribucion <- function(distribucion = "z",
 
   return(breaks_x)
 }
-
