@@ -13,7 +13,7 @@ graficar_distribucion(
   gl = NULL,
   valor_cal = NULL,
   xlim_personalizado = NULL,
-  num_puntos = 1000,
+  num_puntos = 1500,
   rotar_etiquetas_x = TRUE,
   tamanio_etiqueta_cal = 3.5
 )

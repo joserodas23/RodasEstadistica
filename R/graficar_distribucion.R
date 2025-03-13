@@ -33,6 +33,42 @@ graficar_distribucion <- function(distribucion = "z",
                                   rotar_etiquetas_x = TRUE,
                                   tamanio_etiqueta_cal = 3.5) {
 
+  # Verificar y cargar dependencias necesarias
+  cargar_dependencias <- function() {
+    # Lista de paquetes requeridos
+    paquetes_requeridos <- c("ggplot2", "scales")
+
+    # Comprobar cada paquete e instalarlo si es necesario
+    paquetes_a_instalar <- paquetes_requeridos[!sapply(paquetes_requeridos, requireNamespace, quietly = TRUE)]
+
+    if (length(paquetes_a_instalar) > 0) {
+      mensaje <- paste("Instalando paquetes necesarios:", paste(paquetes_a_instalar, collapse = ", "))
+      message(mensaje)
+      install.packages(paquetes_a_instalar, repos = "https://cloud.r-project.org/")
+    }
+
+    # Cargar cada paquete
+    for (pkg in paquetes_requeridos) {
+      suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+    }
+
+    # Verificar que se han cargado
+    paquetes_cargados <- sapply(paquetes_requeridos, require, character.only = TRUE)
+    if (!all(paquetes_cargados)) {
+      paquetes_faltantes <- paquetes_requeridos[!paquetes_cargados]
+      stop(paste("No se pudieron cargar los siguientes paquetes necesarios:",
+                 paste(paquetes_faltantes, collapse = ", ")))
+    }
+  }
+
+  # Intentar cargar las dependencias
+  tryCatch({
+    cargar_dependencias()
+  }, error = function(e) {
+    stop(paste("Error al cargar dependencias: ", e$message,
+               "\nPor favor, instale manualmente los paquetes 'ggplot2' y 'scales' antes de usar esta función."))
+  })
+
   # Validar el tipo de prueba
   tipos_validos <- c("dos_colas", "una_cola_derecha", "una_cola_izquierda", "intervalo_confianza")
   if (!tipo_prueba %in% tipos_validos) {
@@ -101,19 +137,26 @@ graficar_distribucion <- function(distribucion = "z",
            fun_densidad <- function(x) df(x, df1 = gl[1], df2 = gl[2])
            fun_cuantil <- function(p) qf(p, df1 = gl[1], df2 = gl[2])
 
-           # Limites mejorados para F
+           # Limites mejorados para F con soporte para valores grandes de valor_cal
            if (is.null(xlim_personalizado)) {
-             # Para valores altos de gl (>30), la distribución se vuelve más concentrada
-             if (gl[1] >= 30 && gl[2] >= 30) {
-               # Calcular un valor máximo apropiado basado en el valor crítico al 99.9%
-               vc_99 <- qf(0.999, gl[1], gl[2])
-               # Usar un rango más estrecho para visualizar mejor
-               xlim <- c(0, min(5, max(2, vc_99 * 1.5)))
-             } else {
-               # Para otros casos, usar un rango suficientemente amplio
-               max_val <- max(5, qf(0.999, gl[1], gl[2]))
-               xlim <- c(0, max_val)
+             # Calcular valor máximo apropiado
+             vc_99 <- qf(0.999, gl[1], gl[2])
+
+             # Valor predeterminado para el límite superior
+             max_val_for_display <- max(5, vc_99 * 1.5)
+
+             # Si existe un valor_cal, asegurarse de que esté dentro del rango visible
+             if (!is.null(valor_cal)) {
+               max_val_for_display <- max(max_val_for_display, valor_cal * 1.2)  # Añadir margen de 20%
              }
+
+             # Para valores altos de gl (>30), la distribución se vuelve más concentrada
+             if (gl[1] >= 30 && gl[2] >= 30 && is.null(valor_cal)) {
+               # Usar un rango más estrecho para visualizar mejor
+               max_val_for_display <- min(5, max(2, vc_99 * 1.5))
+             }
+
+             xlim <- c(0, max_val_for_display)
            } else {
              xlim <- xlim_personalizado
            }
@@ -129,6 +172,15 @@ graficar_distribucion <- function(distribucion = "z",
          },
          stop("Distribucion debe ser: 'z', 't', 'chi' o 'f'")
   )
+
+  # Asegurarse de que valor_cal está dentro de los límites del gráfico (para todas las distribuciones)
+  if (!is.null(valor_cal)) {
+    if (valor_cal > xlim[2]) {
+      xlim[2] <- max(xlim[2], valor_cal * 1.2)  # Extender límite derecho con margen
+    } else if (!distribucion_una_cola && valor_cal < xlim[1]) {
+      xlim[1] <- min(xlim[1], valor_cal * 1.2)  # Extender límite izquierdo para distribuciones simétricas
+    }
+  }
 
   # Si se proporcionaron limites personalizados para Z o t, usarlos
   if (!is.null(xlim_personalizado) && !distribucion_una_cola) {
@@ -228,8 +280,15 @@ graficar_distribucion <- function(distribucion = "z",
 
       # Crear secuencias de puntos de forma no uniforme
       x_inicio <- seq(0, modo_aprox * 0.9, length.out = n_inicio)
-      x_medio <- seq(modo_aprox * 0.9, max(modo_aprox * 1.5, valor_critico_f * 1.1), length.out = n_medio)
-      x_fin <- seq(max(modo_aprox * 1.5, valor_critico_f * 1.1), xlim[2], length.out = n_fin)
+
+      # Calcular un punto final para x_medio que incluya valor_cal si es necesario
+      punto_final_medio <- max(modo_aprox * 1.5, valor_critico_f * 1.1)
+      if (!is.null(valor_cal) && valor_cal > punto_final_medio && valor_cal < xlim[2]) {
+        punto_final_medio <- valor_cal * 0.9 # Punto cercano a valor_cal
+      }
+
+      x_medio <- seq(modo_aprox * 0.9, punto_final_medio, length.out = n_medio)
+      x_fin <- seq(punto_final_medio, xlim[2], length.out = n_fin)
 
       # Agregar puntos exactos en los valores importantes
       x_exactos <- c(modo_aprox, valor_critico_f)
@@ -435,114 +494,74 @@ graficar_distribucion <- function(distribucion = "z",
                                  color = "blue",
                                  linewidth = 0.8)
 
-    # Calcular posicion optima para la etiqueta Cal. totalmente rediseñada
+    # Función mejorada para colocar etiqueta valor_cal
     posicionar_etiqueta_cal <- function() {
-      # Usar una posicion completamente fuera de la curva
-      # Calcular una posicion en la parte superior del grafico, justo despues de las lineas de valor critico
+      # Determinar la posición de la etiqueta evitando áreas sombreadas y sobreposiciones
+      x_pos <- valor_cal  # Posición por defecto
 
-      # Determinar la posicion de la etiqueta evitando areas sombreadas
-      if (tipo_prueba == "dos_colas") {
-        # Para dos colas, verificar que lado tiene mas espacio libre
-        if (valor_cal < 0) {
-          # Si esta a la izquierda
-          if (valor_cal < -valor_critico) {
-            # Si esta en la region de rechazo izquierda
-            x_pos <- min((valor_cal + xlim[1])/2, valor_cal - 0.4)
-          } else {
-            # Si esta en la region de aceptacion
-            x_pos <- max(-0.8, (valor_cal - 0)/2)
-          }
-        } else {
-          # Si esta a la derecha
-          if (valor_cal > valor_critico) {
-            # Si esta en la region de rechazo derecha
-            x_pos <- max((valor_cal + xlim[2])/2, valor_cal + 0.4)
-          } else {
-            # Si esta en la region de aceptacion
-            x_pos <- min(0.8, (valor_cal + 0)/2)
-          }
-        }
-      } else if (tipo_prueba == "una_cola_derecha") {
-        # Para cola derecha
-        if (valor_cal > valor_critico) {
-          # Si esta en la region de rechazo
-          x_pos <- max((valor_cal + xlim[2])/2, valor_cal + 0.4)
-        } else {
-          # Si esta en la region de aceptacion
-          x_pos <- min(valor_critico * 0.7, (valor_cal + valor_critico)/2)
-        }
-      } else if (tipo_prueba == "una_cola_izquierda") {
-        # Para cola izquierda
-        if (valor_cal < valor_critico) {
-          # Si esta en la region de rechazo
-          x_pos <- min((valor_cal + xlim[1])/2, valor_cal - 0.4)
-        } else {
-          # Si esta en la region de aceptacion
-          x_pos <- max(valor_critico * 0.7, (valor_cal + valor_critico)/2)
-        }
-      } else {
-        # Para intervalo de confianza
-        if (distribucion_una_cola) {
-          if (valor_cal < valores_criticos[1] || valor_cal > valores_criticos[2]) {
-            # Si esta en alguna region de rechazo
-            if (valor_cal < valores_criticos[1]) {
-              x_pos <- max(xlim[1] * 0.8, valor_cal - 0.5)
-            } else {
-              x_pos <- min(xlim[2] * 0.8, valor_cal + 0.5)
-            }
-          } else {
-            # Si esta en la region de aceptacion
-            x_pos <- (valores_criticos[1] + valores_criticos[2])/2
-          }
-        } else {
-          # Similar a dos colas
-          if (valor_cal < -valor_critico || valor_cal > valor_critico) {
-            # Si esta en alguna region de rechazo
-            if (valor_cal < -valor_critico) {
-              x_pos <- min((valor_cal + xlim[1])/2, valor_cal - 0.4)
-            } else {
-              x_pos <- max((valor_cal + xlim[2])/2, valor_cal + 0.4)
-            }
-          } else {
-            # Si esta en la region de aceptacion
-            x_pos <- valor_cal + 0.5
-          }
+      # Ajustar posición x para casos extremos
+      if (valor_cal > xlim[2] * 0.9) {
+        # Si está muy cerca del límite derecho
+        x_pos <- xlim[2] * 0.8
+      } else if (!distribucion_una_cola && valor_cal < xlim[1] * 0.9) {
+        # Si está muy cerca del límite izquierdo en distribuciones simétricas
+        x_pos <- xlim[1] * 0.8
+      }
+
+      # Verificar si hay valores críticos cerca del valor_cal
+      cercano_a_critico <- FALSE
+      for (vc in valores_criticos) {
+        if (abs(valor_cal - vc) < (xlim[2] - xlim[1]) * 0.05) {
+          cercano_a_critico <- TRUE
+          break
         }
       }
 
-      # Calcular una posicion Y que quede bien arriba o abajo, fuera de la curva
-      # Usar la parte inferior del grafico para una mejor visibilidad
-      # Ajustar posicion Y para estar cerca del eje X pero visible
+      # Ajustar posición si está cerca de un valor crítico
+      if (cercano_a_critico) {
+        # Desplazar la etiqueta para evitar sobreposición
+        direccion <- sign(valor_cal - median(valores_criticos))
+        x_pos <- valor_cal + direccion * (xlim[2] - xlim[1]) * 0.08
+      }
+
+      # Calcular posición y para la etiqueta
       y_pos <- y_max * 0.08  # Justo encima del eje X
 
-      # En distribuciones con valores altos de densidad cerca del origen
-      # Verificar si estamos cerca del pico
-      if (distribucion_una_cola) {
-        # Para chi y F, estar mas lejos del pico
-        if (valor_cal < 2) {
-          y_pos <- min(y_max * 0.05, fun_densidad(valor_cal) * 0.2)
-        }
-      } else {
-        # Para Z y t, verificar distancia al origen
-        if (abs(valor_cal) < 0.5) {
-          y_pos <- min(y_max * 0.05, fun_densidad(valor_cal) * 0.1)
-        }
+      # En distribuciones con densidad alta cerca del origen, ajustar
+      if (distribucion_una_cola && valor_cal < 2) {
+        y_pos <- min(y_max * 0.05, fun_densidad(max(0.1, valor_cal)) * 0.2)
+      } else if (!distribucion_una_cola && abs(valor_cal) < 0.5) {
+        y_pos <- min(y_max * 0.05, fun_densidad(valor_cal) * 0.1)
       }
 
-      # Usar un color de fondo mas visible
+      # Crear la etiqueta con estilo mejorado
       p <- p + ggplot2::annotate(
         "label",
         x = x_pos,
         y = y_pos,
         label = paste("Cal =", sprintf("%.2f", valor_cal)),
         color = "white",  # Texto blanco
-        fill = "#0066cc",  # Fondo azul mas oscuro
+        fill = "#0066cc",  # Fondo azul más oscuro
         alpha = 1,  # Sin transparencia
         hjust = 0.5,  # Centrado
         vjust = 0.5,  # Centrado
         size = tamanio_etiqueta_cal,
         fontface = "bold"  # Texto en negrita
       )
+
+      # Si el valor está fuera o muy cerca de los límites, agregar una flecha
+      if (valor_cal > xlim[2] * 0.98 || valor_cal < xlim[1] * 1.02) {
+        direccion <- sign(valor_cal - x_pos)
+        p <- p + ggplot2::annotate(
+          "segment",
+          x = x_pos,
+          xend = x_pos + direccion * (xlim[2] - xlim[1]) * 0.05,
+          y = y_pos,
+          yend = y_pos,
+          arrow = ggplot2::arrow(length = ggplot2::unit(0.2, "cm")),
+          color = "#0066cc"
+        )
+      }
 
       return(p)
     }

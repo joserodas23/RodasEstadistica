@@ -1,0 +1,419 @@
+---
+title: "Pruebas de Diferencia de Medias para Muestras Pequeñas con Varianzas Diferentes"
+author: "Tu Nombre"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE, 
+  warning = FALSE,
+  comment = "#>",
+  fig.align = "center",
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "80%"
+)
+
+# Cargar paquetes necesarios
+library(tidyverse)
+library(effectsize)
+library(ggplot2)
+library(kableExtra)
+library(pwr)
+```
+
+# Introducción a las Pruebas de Diferencia de Medias con Muestras Pequeñas
+
+Cuando se trabaja con muestras pequeñas (n < 30) y se quiere comparar las medias de dos poblaciones, es fundamental considerar tanto el tamaño de las muestras como las características de las varianzas de ambas poblaciones. Este capítulo se enfoca específicamente en cómo abordar la prueba de diferencia de medias cuando las muestras son pequeñas y las varianzas son diferentes.
+
+## Contexto y Relevancia
+
+Las pruebas de diferencia de medias se utilizan ampliamente en diversas disciplinas científicas para determinar si existen diferencias significativas entre dos grupos. Como señala @kim2015t:
+
+> "La prueba t para muestras independientes es una de las pruebas estadísticas más utilizadas, pero sus supuestos deben ser cuidadosamente evaluados, especialmente cuando se trabaja con muestras pequeñas."
+
+Cuando las muestras son pequeñas, la probabilidad de que no se cumplan los supuestos de normalidad y homogeneidad de varianzas aumenta. Según @ruxton2006unequal, esto puede llevar a interpretaciones erróneas y conclusiones incorrectas si no se utilizan las técnicas estadísticas apropiadas.
+
+## Desafíos con Muestras Pequeñas y Varianzas Diferentes
+
+La prueba t tradicional de Student asume que las varianzas de ambas poblaciones son iguales. Sin embargo, @welch1947generalization demostró que esta suposición rara vez se cumple en la práctica y propuso una modificación a la prueba t que no requiere este supuesto. Esta modificación, conocida como la prueba t de Welch, es particularmente útil cuando:
+
+1. Los tamaños de las muestras son pequeños (n < 30)
+2. Las varianzas de las poblaciones son notablemente diferentes
+3. Los tamaños de las muestras de ambos grupos son desiguales
+
+@delacre2017psychologists argumentan que la prueba t de Welch debería ser el método predeterminado para comparar dos medias independientes, incluso cuando las varianzas parecen ser similares, ya que proporciona mayor robustez sin pérdida significativa de potencia estadística.
+
+# Fundamentos Teóricos
+
+## La Prueba t de Welch para Varianzas Desiguales
+
+La prueba t de Welch es una adaptación de la prueba t de Student diseñada específicamente para situaciones donde no se puede asumir la igualdad de varianzas. Fue desarrollada por Welch en 1947 como una solución al problema de Behrens-Fisher.
+
+La estadística de prueba para la prueba t de Welch se calcula como:
+
+$$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$$
+
+Donde:
+- $\bar{X}_1$ y $\bar{X}_2$ son las medias muestrales
+- $s_1^2$ y $s_2^2$ son las varianzas muestrales
+- $n_1$ y $n_2$ son los tamaños de las muestras
+
+Los grados de libertad se aproximan mediante la ecuación de Welch-Satterthwaite:
+
+$$\nu \approx \frac{\left(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}\right)^2}{\frac{\left(\frac{s_1^2}{n_1}\right)^2}{n_1-1} + \frac{\left(\frac{s_2^2}{n_2}\right)^2}{n_2-1}}$$
+
+Según @fagerland2012t, esta modificación de los grados de libertad es crucial cuando se trabaja con muestras pequeñas, ya que ajusta la distribución de referencia para compensar la incertidumbre adicional introducida por las varianzas desiguales.
+
+## Supuestos de la Prueba t de Welch
+
+A diferencia de la prueba t de Student estándar, la prueba t de Welch no requiere el supuesto de igualdad de varianzas. Sin embargo, todavía mantiene algunos supuestos importantes:
+
+1. **Independencia**: Las muestras deben ser independientes entre sí.
+2. **Normalidad**: Las poblaciones de origen deben seguir una distribución aproximadamente normal.
+
+@cribbie2012analysis destacan que aunque la prueba t de Welch es más robusta frente a violaciones del supuesto de normalidad que la prueba t tradicional, con muestras muy pequeñas (n < 10) es recomendable verificar cuidadosamente este supuesto.
+
+## Prueba de Levene para Igualdad de Varianzas
+
+Antes de decidir qué prueba t utilizar, es común realizar una prueba formal para evaluar la igualdad de varianzas. La prueba de Levene es una de las más utilizadas para este propósito:
+
+> "La prueba de Levene es menos sensible a desviaciones de la normalidad que otras pruebas para homogeneidad de varianzas, lo que la hace preferible cuando se trabaja con muestras pequeñas." [@gastwirth2009impact]
+
+La hipótesis nula de la prueba de Levene es que las varianzas de las poblaciones son iguales:
+
+$$H_0: \sigma_1^2 = \sigma_2^2$$
+
+Si esta hipótesis se rechaza (p < 0.05), se recomienda utilizar la prueba t de Welch en lugar de la prueba t de Student tradicional.
+
+# Implementación en R
+
+## Preparación de los Datos
+
+Para ilustrar la aplicación de la prueba t de Welch, utilizaremos un conjunto de datos simulado que representa los resultados de un experimento agrícola donde se comparan los rendimientos de dos variedades de cultivo en parcelas pequeñas.
+
+```{r generar-datos}
+set.seed(123)
+
+# Generar datos para dos muestras con diferente varianza
+muestra_A <- data.frame(
+  variedad = "Variedad A",
+  rendimiento = rnorm(15, mean = 75, sd = 8)  # n=15, media=75, SD=8
+)
+
+muestra_B <- data.frame(
+  variedad = "Variedad B",
+  rendimiento = rnorm(12, mean = 82, sd = 14)  # n=12, media=82, SD=14
+)
+
+# Combinar los datos
+datos_rendimiento <- rbind(muestra_A, muestra_B)
+
+# Visualizar los primeros registros
+head(datos_rendimiento) %>%
+  kbl(caption = "Primeros registros del conjunto de datos de rendimiento") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+## Exploración Inicial de los Datos
+
+Antes de realizar la prueba de hipótesis, es importante explorar visualmente los datos y calcular estadísticas descriptivas para cada grupo.
+
+```{r exploracion}
+# Estadísticas descriptivas por grupo
+datos_rendimiento %>%
+  group_by(variedad) %>%
+  summarise(
+    n = n(),
+    media = mean(rendimiento),
+    desv_est = sd(rendimiento),
+    error_est = desv_est / sqrt(n),
+    min = min(rendimiento),
+    max = max(rendimiento),
+    varianza = var(rendimiento)
+  ) %>%
+  kbl(caption = "Estadísticas descriptivas por variedad") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# Visualización con boxplots
+ggplot(datos_rendimiento, aes(x = variedad, y = rendimiento, fill = variedad)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, color = "red") +
+  labs(
+    title = "Comparación de Rendimiento entre Variedades",
+    subtitle = "Los puntos rojos representan las medias",
+    x = "Variedad",
+    y = "Rendimiento (kg/parcela)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+## Verificación de Supuestos
+
+### 1. Prueba de Normalidad
+
+Verificamos la normalidad de cada grupo utilizando la prueba de Shapiro-Wilk. Esta prueba es especialmente adecuada para muestras pequeñas, como señala @razali2011power.
+
+```{r normalidad}
+# Prueba de normalidad para cada grupo
+datos_rendimiento %>%
+  group_by(variedad) %>%
+  summarise(
+    shapiro_p = shapiro.test(rendimiento)$p.value,
+    es_normal = ifelse(shapiro_p > 0.05, "Sí", "No")
+  ) %>%
+  kbl(caption = "Prueba de normalidad por variedad") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# QQ-plots para visualizar la normalidad
+ggplot(datos_rendimiento, aes(sample = rendimiento)) +
+  geom_qq() +
+  geom_qq_line() +
+  facet_wrap(~variedad) +
+  labs(
+    title = "Gráficos Q-Q para Evaluar Normalidad",
+    x = "Cuantiles teóricos",
+    y = "Cuantiles observados"
+  ) +
+  theme_minimal()
+```
+
+### 2. Prueba de Homogeneidad de Varianzas
+
+Evaluamos si las varianzas son significativamente diferentes utilizando la prueba de Levene.
+
+```{r varianzas}
+# Prueba de Levene para homogeneidad de varianzas
+levene_test <- car::leveneTest(rendimiento ~ variedad, data = datos_rendimiento)
+
+levene_test %>%
+  as.data.frame() %>%
+  kbl(caption = "Prueba de Levene para homogeneidad de varianzas") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+## Realización de la Prueba t de Welch
+
+Dado que las varianzas son significativamente diferentes (prueba de Levene con p < 0.05), procedemos a realizar la prueba t de Welch:
+
+```{r welch}
+# Prueba t de Welch para diferencia de medias
+welch_test <- t.test(rendimiento ~ variedad, data = datos_rendimiento, var.equal = FALSE)
+
+# Resultados detallados
+welch_test_results <- data.frame(
+  estadistico_t = welch_test$statistic,
+  grados_libertad = welch_test$parameter,
+  valor_p = welch_test$p.value,
+  media_grupo1 = welch_test$estimate[1],
+  media_grupo2 = welch_test$estimate[2],
+  diferencia = welch_test$estimate[2] - welch_test$estimate[1],
+  IC_inferior = welch_test$conf.int[1],
+  IC_superior = welch_test$conf.int[2]
+)
+
+welch_test_results %>%
+  kbl(caption = "Resultados de la prueba t de Welch") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+## Interpretación de los Resultados
+
+A partir de los resultados de la prueba t de Welch, podemos concluir que existe una diferencia estadísticamente significativa entre los rendimientos medios de las dos variedades (t(`r round(welch_test$parameter, 2)`) = `r round(welch_test$statistic, 2)`, p = `r format.pval(welch_test$p.value, digits = 3)`).
+
+La Variedad B muestra un rendimiento promedio mayor (`r round(welch_test$estimate[2], 2)` kg/parcela) en comparación con la Variedad A (`r round(welch_test$estimate[1], 2)` kg/parcela), con una diferencia media de `r round(welch_test$estimate[2] - welch_test$estimate[1], 2)` kg/parcela.
+
+El intervalo de confianza del 95% para la diferencia de medias es [`r round(welch_test$conf.int[1], 2)`, `r round(welch_test$conf.int[2], 2)`], lo que indica que podemos estar 95% seguros de que la verdadera diferencia de medias poblacionales se encuentra dentro de este rango.
+
+## Cálculo del Tamaño del Efecto
+
+Como señala @sullivan2012using, la significancia estadística no siempre indica la importancia práctica del hallazgo. Por lo tanto, es recomendable calcular también el tamaño del efecto.
+
+```{r effect-size}
+# Calcular d de Cohen para el tamaño del efecto
+cohens_d <- effectsize::cohens_d(rendimiento ~ variedad, data = datos_rendimiento, pooled_sd = FALSE)
+
+cohens_d %>%
+  as.data.frame() %>%
+  kbl(caption = "Tamaño del efecto (d de Cohen)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# Interpretación del tamaño del efecto según Cohen
+interpretacion <- case_when(
+  abs(cohens_d$Cohens_d) < 0.2 ~ "Efecto pequeño",
+  abs(cohens_d$Cohens_d) < 0.5 ~ "Efecto pequeño a mediano",
+  abs(cohens_d$Cohens_d) < 0.8 ~ "Efecto mediano a grande",
+  TRUE ~ "Efecto grande"
+)
+```
+
+Según los criterios de Cohen, el tamaño del efecto calculado (d = `r round(cohens_d$Cohens_d, 2)`) se considera un `r interpretacion`, lo que sugiere que la diferencia observada tiene relevancia práctica.
+
+## Cálculo de la Potencia Estadística
+
+La potencia estadística es especialmente importante cuando se trabaja con muestras pequeñas. Como señala @button2013power:
+
+> "Los estudios con bajas potencias estadísticas no solo tienen una reducida probabilidad de detectar un efecto real, sino que también reducen la probabilidad de que un efecto detectado refleje una verdadera diferencia."
+
+```{r power}
+# Calcular potencia estadística post-hoc
+potencia <- pwr.t2n.test(
+  n1 = nrow(muestra_A),
+  n2 = nrow(muestra_B),
+  d = as.numeric(cohens_d$Cohens_d),
+  sig.level = 0.05,
+  alternative = "two.sided"
+)
+
+data.frame(
+  tamaño_muestra_A = nrow(muestra_A),
+  tamaño_muestra_B = nrow(muestra_B),
+  tamaño_efecto = as.numeric(cohens_d$Cohens_d),
+  nivel_significancia = 0.05,
+  potencia = potencia$power
+) %>%
+  kbl(caption = "Análisis de potencia estadística") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+Con una potencia de `r round(potencia$power, 2)`, tenemos aproximadamente `r round(potencia$power * 100, 0)`% de probabilidad de detectar una diferencia real cuando esta existe.
+
+# Comparación con la Prueba t de Student Tradicional
+
+Es interesante comparar los resultados de la prueba t de Welch con los que obtendríamos utilizando la prueba t de Student tradicional (que asume varianzas iguales). @moser1992importance señala que ignorar la desigualdad de varianzas puede llevar a conclusiones erróneas, especialmente cuando los tamaños de muestra son desiguales.
+
+```{r student}
+# Prueba t de Student (asumiendo varianzas iguales)
+student_test <- t.test(rendimiento ~ variedad, data = datos_rendimiento, var.equal = TRUE)
+
+comparacion <- data.frame(
+  prueba = c("t de Welch", "t de Student"),
+  valor_t = c(welch_test$statistic, student_test$statistic),
+  grados_libertad = c(welch_test$parameter, student_test$parameter),
+  valor_p = c(welch_test$p.value, student_test$p.value),
+  IC_inferior = c(welch_test$conf.int[1], student_test$conf.int[1]),
+  IC_superior = c(welch_test$conf.int[2], student_test$conf.int[2])
+)
+
+comparacion %>%
+  kbl(caption = "Comparación entre prueba t de Welch y prueba t de Student") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+Como se puede observar, en este caso la prueba t de Student proporciona resultados ligeramente diferentes a los de la prueba t de Welch, especialmente en términos de grados de libertad y el intervalo de confianza. Esta diferencia demuestra la importancia de seleccionar la prueba apropiada según las características de los datos.
+
+# Aplicación a un Caso Real: Análisis de Rendimiento de Cultivos
+
+Para ilustrar la aplicación de estas técnicas en un contexto real, consideremos el siguiente escenario:
+
+Un investigador agrícola está evaluando el efecto de un nuevo fertilizante orgánico en el rendimiento de trigo. Se establecieron parcelas de prueba pequeñas y se asignaron aleatoriamente a dos tratamientos: fertilizante convencional (control) y nuevo fertilizante orgánico (tratamiento). Debido a limitaciones logísticas, solo se pudieron establecer 14 parcelas para el control y 11 para el tratamiento.
+
+```{r caso-real}
+# Cargar datos desde archivo CSV (simulados para este ejemplo)
+# En un caso real, utilizaríamos: datos_trigo <- read.csv("datos_trigo.csv")
+
+# Simulación de datos para el ejemplo
+set.seed(456)
+datos_trigo <- data.frame(
+  tratamiento = c(
+    rep("Convencional", 14),
+    rep("Orgánico", 11)
+  ),
+  rendimiento = c(
+    rnorm(14, mean = 3.8, sd = 0.4),  # Convencional: mayor uniformidad
+    rnorm(11, mean = 4.3, sd = 0.7)   # Orgánico: mayor variabilidad
+  )
+)
+
+# Visualizar los datos
+ggplot(datos_trigo, aes(x = tratamiento, y = rendimiento, fill = tratamiento)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, color = "red") +
+  labs(
+    title = "Comparación de Rendimiento entre Tratamientos",
+    subtitle = "Fertilizante Convencional vs. Orgánico",
+    x = "Tratamiento",
+    y = "Rendimiento (ton/ha)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Estadísticas descriptivas
+datos_trigo %>%
+  group_by(tratamiento) %>%
+  summarise(
+    n = n(),
+    media = mean(rendimiento),
+    desv_est = sd(rendimiento),
+    varianza = var(rendimiento),
+    error_est = desv_est / sqrt(n)
+  ) %>%
+  kbl(caption = "Estadísticas descriptivas por tratamiento") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# Prueba de Levene para homogeneidad de varianzas
+levene_trigo <- car::leveneTest(rendimiento ~ tratamiento, data = datos_trigo)
+levene_trigo %>%
+  as.data.frame() %>%
+  kbl(caption = "Prueba de Levene para homogeneidad de varianzas") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# Prueba t de Welch
+welch_trigo <- t.test(rendimiento ~ tratamiento, data = datos_trigo, var.equal = FALSE)
+welch_trigo
+```
+
+## Interpretación del Caso Real
+
+Los resultados muestran una diferencia estadísticamente significativa (t = `r round(welch_trigo$statistic, 2)`, gl = `r round(welch_trigo$parameter, 2)`, p = `r format.pval(welch_trigo$p.value, digits = 3)`) en el rendimiento medio entre el fertilizante convencional (`r round(welch_trigo$estimate[1], 2)` ton/ha) y el orgánico (`r round(welch_trigo$estimate[2], 2)` ton/ha).
+
+El intervalo de confianza del 95% para la diferencia de medias es [`r round(welch_trigo$conf.int[1], 2)`, `r round(welch_trigo$conf.int[2], 2)`] ton/ha, lo que indica que el fertilizante orgánico produce un incremento significativo en el rendimiento.
+
+Estos resultados son especialmente confiables porque hemos utilizado la prueba t de Welch, que es apropiada para esta situación donde las varianzas son diferentes, como se confirma con la prueba de Levene (p = `r format.pval(levene_trigo[["Pr(>F)"]][1], digits = 3)`).
+
+# Recomendaciones Prácticas
+
+Basándose en la literatura científica y en los ejemplos presentados, se pueden extraer las siguientes recomendaciones prácticas para el análisis de diferencias de medias con muestras pequeñas y varianzas diferentes:
+
+1. **Siempre verificar los supuestos**:
+   - Normalidad: Prueba de Shapiro-Wilk y gráficos Q-Q
+   - Homogeneidad de varianzas: Prueba de Levene
+
+2. **Preferir la prueba t de Welch**:
+   Como sugieren @delacre2017psychologists, la prueba t de Welch debería ser la opción predeterminada para comparar dos medias independientes, incluso cuando las varianzas parecen similares.
+
+3. **Complementar con estadísticas descriptivas**:
+   Los diagramas de caja, histogramas y estadísticas resumidas ayudan a entender la naturaleza de los datos más allá de la prueba de hipótesis.
+
+4. **Reportar el tamaño del efecto**:
+   La d de Cohen u otras medidas de tamaño del efecto proporcionan información sobre la magnitud de la diferencia, complementando la significancia estadística.
+
+5. **Considerar la potencia estadística**:
+   Con muestras pequeñas, es crucial evaluar si el estudio tiene suficiente potencia para detectar el efecto de interés.
+
+6. **Interpretar los resultados con cautela**:
+   Reconocer las limitaciones de las muestras pequeñas y considerar los resultados en el contexto más amplio del campo de estudio.
+
+# Conclusiones
+
+Las pruebas de diferencia de medias para muestras pequeñas con varianzas diferentes presentan desafíos particulares que requieren un enfoque estadístico cuidadoso. La prueba t de Welch ofrece una solución robusta a este problema, permitiendo realizar inferencias válidas incluso cuando no se cumple el supuesto de homogeneidad de varianzas.
+
+Como señala @ruxton2006unequal:
+
+> "La prueba t modificada de Welch resuelve el problema de la prueba t de Student cuando se violan los supuestos de igualdad de varianzas, sin sacrificar potencia estadística."
+
+En el contexto de investigaciones con restricciones logísticas o éticas que limitan el tamaño de las muestras, es fundamental aplicar las técnicas estadísticas apropiadas y reportar los resultados de manera transparente, reconociendo tanto las fortalezas como las limitaciones del análisis.
+
+# Referencias

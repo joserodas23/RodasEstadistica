@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.40">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Tu Nombre">
+<meta name="dcterms.date" content="2025-03-10">
+
+<title>Pruebas de Diferencia de Medias para Muestras Pequeñas con Varianzas Diferentes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="dd_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dd_files/libs/quarto-html/quarto.js"></script>
+<script src="dd_files/libs/quarto-html/popper.min.js"></script>
+<script src="dd_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dd_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dd_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="dd_files/libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="dd_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dd_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="dd_files/libs/bootstrap/bootstrap-a1ff8711b79ae3724c050874b28d9907.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="dd_files/libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="dd_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introducción-a-las-pruebas-de-diferencia-de-medias-con-muestras-pequeñas" id="toc-introducción-a-las-pruebas-de-diferencia-de-medias-con-muestras-pequeñas" class="nav-link active" data-scroll-target="#introducción-a-las-pruebas-de-diferencia-de-medias-con-muestras-pequeñas"><span class="header-section-number">1</span> Introducción a las Pruebas de Diferencia de Medias con Muestras Pequeñas</a>
+  <ul class="collapse">
+  <li><a href="#contexto-y-relevancia" id="toc-contexto-y-relevancia" class="nav-link" data-scroll-target="#contexto-y-relevancia"><span class="header-section-number">1.1</span> Contexto y Relevancia</a></li>
+  <li><a href="#desafíos-con-muestras-pequeñas-y-varianzas-diferentes" id="toc-desafíos-con-muestras-pequeñas-y-varianzas-diferentes" class="nav-link" data-scroll-target="#desafíos-con-muestras-pequeñas-y-varianzas-diferentes"><span class="header-section-number">1.2</span> Desafíos con Muestras Pequeñas y Varianzas Diferentes</a></li>
+  </ul></li>
+  <li><a href="#fundamentos-teóricos" id="toc-fundamentos-teóricos" class="nav-link" data-scroll-target="#fundamentos-teóricos"><span class="header-section-number">2</span> Fundamentos Teóricos</a>
+  <ul class="collapse">
+  <li><a href="#la-prueba-t-de-welch-para-varianzas-desiguales" id="toc-la-prueba-t-de-welch-para-varianzas-desiguales" class="nav-link" data-scroll-target="#la-prueba-t-de-welch-para-varianzas-desiguales"><span class="header-section-number">2.1</span> La Prueba t de Welch para Varianzas Desiguales</a></li>
+  <li><a href="#supuestos-de-la-prueba-t-de-welch" id="toc-supuestos-de-la-prueba-t-de-welch" class="nav-link" data-scroll-target="#supuestos-de-la-prueba-t-de-welch"><span class="header-section-number">2.2</span> Supuestos de la Prueba t de Welch</a></li>
+  <li><a href="#prueba-de-levene-para-igualdad-de-varianzas" id="toc-prueba-de-levene-para-igualdad-de-varianzas" class="nav-link" data-scroll-target="#prueba-de-levene-para-igualdad-de-varianzas"><span class="header-section-number">2.3</span> Prueba de Levene para Igualdad de Varianzas</a></li>
+  </ul></li>
+  <li><a href="#implementación-en-r" id="toc-implementación-en-r" class="nav-link" data-scroll-target="#implementación-en-r"><span class="header-section-number">3</span> Implementación en R</a>
+  <ul class="collapse">
+  <li><a href="#preparación-de-los-datos" id="toc-preparación-de-los-datos" class="nav-link" data-scroll-target="#preparación-de-los-datos"><span class="header-section-number">3.1</span> Preparación de los Datos</a></li>
+  <li><a href="#exploración-inicial-de-los-datos" id="toc-exploración-inicial-de-los-datos" class="nav-link" data-scroll-target="#exploración-inicial-de-los-datos"><span class="header-section-number">3.2</span> Exploración Inicial de los Datos</a></li>
+  <li><a href="#verificación-de-supuestos" id="toc-verificación-de-supuestos" class="nav-link" data-scroll-target="#verificación-de-supuestos"><span class="header-section-number">3.3</span> Verificación de Supuestos</a>
+  <ul class="collapse">
+  <li><a href="#prueba-de-normalidad" id="toc-prueba-de-normalidad" class="nav-link" data-scroll-target="#prueba-de-normalidad"><span class="header-section-number">3.3.1</span> 1. Prueba de Normalidad</a></li>
+  <li><a href="#prueba-de-homogeneidad-de-varianzas" id="toc-prueba-de-homogeneidad-de-varianzas" class="nav-link" data-scroll-target="#prueba-de-homogeneidad-de-varianzas"><span class="header-section-number">3.3.2</span> 2. Prueba de Homogeneidad de Varianzas</a></li>
+  </ul></li>
+  <li><a href="#realización-de-la-prueba-t-de-welch" id="toc-realización-de-la-prueba-t-de-welch" class="nav-link" data-scroll-target="#realización-de-la-prueba-t-de-welch"><span class="header-section-number">3.4</span> Realización de la Prueba t de Welch</a></li>
+  <li><a href="#interpretación-de-los-resultados" id="toc-interpretación-de-los-resultados" class="nav-link" data-scroll-target="#interpretación-de-los-resultados"><span class="header-section-number">3.5</span> Interpretación de los Resultados</a></li>
+  <li><a href="#cálculo-del-tamaño-del-efecto" id="toc-cálculo-del-tamaño-del-efecto" class="nav-link" data-scroll-target="#cálculo-del-tamaño-del-efecto"><span class="header-section-number">3.6</span> Cálculo del Tamaño del Efecto</a></li>
+  <li><a href="#cálculo-de-la-potencia-estadística" id="toc-cálculo-de-la-potencia-estadística" class="nav-link" data-scroll-target="#cálculo-de-la-potencia-estadística"><span class="header-section-number">3.7</span> Cálculo de la Potencia Estadística</a></li>
+  </ul></li>
+  <li><a href="#comparación-con-la-prueba-t-de-student-tradicional" id="toc-comparación-con-la-prueba-t-de-student-tradicional" class="nav-link" data-scroll-target="#comparación-con-la-prueba-t-de-student-tradicional"><span class="header-section-number">4</span> Comparación con la Prueba t de Student Tradicional</a></li>
+  <li><a href="#aplicación-a-un-caso-real-análisis-de-rendimiento-de-cultivos" id="toc-aplicación-a-un-caso-real-análisis-de-rendimiento-de-cultivos" class="nav-link" data-scroll-target="#aplicación-a-un-caso-real-análisis-de-rendimiento-de-cultivos"><span class="header-section-number">5</span> Aplicación a un Caso Real: Análisis de Rendimiento de Cultivos</a>
+  <ul class="collapse">
+  <li><a href="#interpretación-del-caso-real" id="toc-interpretación-del-caso-real" class="nav-link" data-scroll-target="#interpretación-del-caso-real"><span class="header-section-number">5.1</span> Interpretación del Caso Real</a></li>
+  </ul></li>
+  <li><a href="#recomendaciones-prácticas" id="toc-recomendaciones-prácticas" class="nav-link" data-scroll-target="#recomendaciones-prácticas"><span class="header-section-number">6</span> Recomendaciones Prácticas</a></li>
+  <li><a href="#conclusiones" id="toc-conclusiones" class="nav-link" data-scroll-target="#conclusiones"><span class="header-section-number">7</span> Conclusiones</a></li>
+  <li><a href="#referencias" id="toc-referencias" class="nav-link" data-scroll-target="#referencias"><span class="header-section-number">8</span> Referencias</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Pruebas de Diferencia de Medias para Muestras Pequeñas con Varianzas Diferentes</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Tu Nombre </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 10, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducción-a-las-pruebas-de-diferencia-de-medias-con-muestras-pequeñas" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introducción a las Pruebas de Diferencia de Medias con Muestras Pequeñas</h1>
+<p>Cuando se trabaja con muestras pequeñas (n &lt; 30) y se quiere comparar las medias de dos poblaciones, es fundamental considerar tanto el tamaño de las muestras como las características de las varianzas de ambas poblaciones. Este capítulo se enfoca específicamente en cómo abordar la prueba de diferencia de medias cuando las muestras son pequeñas y las varianzas son diferentes.</p>
+<section id="contexto-y-relevancia" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="contexto-y-relevancia"><span class="header-section-number">1.1</span> Contexto y Relevancia</h2>
+<p>Las pruebas de diferencia de medias se utilizan ampliamente en diversas disciplinas científicas para determinar si existen diferencias significativas entre dos grupos. Como señala <span class="citation" data-cites="kim2015t">@kim2015t</span>:</p>
+<blockquote class="blockquote">
+<p>“La prueba t para muestras independientes es una de las pruebas estadísticas más utilizadas, pero sus supuestos deben ser cuidadosamente evaluados, especialmente cuando se trabaja con muestras pequeñas.”</p>
+</blockquote>
+<p>Cuando las muestras son pequeñas, la probabilidad de que no se cumplan los supuestos de normalidad y homogeneidad de varianzas aumenta. Según <span class="citation" data-cites="ruxton2006unequal">@ruxton2006unequal</span>, esto puede llevar a interpretaciones erróneas y conclusiones incorrectas si no se utilizan las técnicas estadísticas apropiadas.</p>
+</section>
+<section id="desafíos-con-muestras-pequeñas-y-varianzas-diferentes" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="desafíos-con-muestras-pequeñas-y-varianzas-diferentes"><span class="header-section-number">1.2</span> Desafíos con Muestras Pequeñas y Varianzas Diferentes</h2>
+<p>La prueba t tradicional de Student asume que las varianzas de ambas poblaciones son iguales. Sin embargo, <span class="citation" data-cites="welch1947generalization">@welch1947generalization</span> demostró que esta suposición rara vez se cumple en la práctica y propuso una modificación a la prueba t que no requiere este supuesto. Esta modificación, conocida como la prueba t de Welch, es particularmente útil cuando:</p>
+<ol type="1">
+<li>Los tamaños de las muestras son pequeños (n &lt; 30)</li>
+<li>Las varianzas de las poblaciones son notablemente diferentes</li>
+<li>Los tamaños de las muestras de ambos grupos son desiguales</li>
+</ol>
+<p><span class="citation" data-cites="delacre2017psychologists">@delacre2017psychologists</span> argumentan que la prueba t de Welch debería ser el método predeterminado para comparar dos medias independientes, incluso cuando las varianzas parecen ser similares, ya que proporciona mayor robustez sin pérdida significativa de potencia estadística.</p>
+</section>
+</section>
+<section id="fundamentos-teóricos" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Fundamentos Teóricos</h1>
+<section id="la-prueba-t-de-welch-para-varianzas-desiguales" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="la-prueba-t-de-welch-para-varianzas-desiguales"><span class="header-section-number">2.1</span> La Prueba t de Welch para Varianzas Desiguales</h2>
+<p>La prueba t de Welch es una adaptación de la prueba t de Student diseñada específicamente para situaciones donde no se puede asumir la igualdad de varianzas. Fue desarrollada por Welch en 1947 como una solución al problema de Behrens-Fisher.</p>
+<p>La estadística de prueba para la prueba t de Welch se calcula como:</p>
+<p><span class="math display">\[t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}\]</span></p>
+<p>Donde: - <span class="math inline">\(\bar{X}_1\)</span> y <span class="math inline">\(\bar{X}_2\)</span> son las medias muestrales - <span class="math inline">\(s_1^2\)</span> y <span class="math inline">\(s_2^2\)</span> son las varianzas muestrales - <span class="math inline">\(n_1\)</span> y <span class="math inline">\(n_2\)</span> son los tamaños de las muestras</p>
+<p>Los grados de libertad se aproximan mediante la ecuación de Welch-Satterthwaite:</p>
+<p><span class="math display">\[\nu \approx \frac{\left(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}\right)^2}{\frac{\left(\frac{s_1^2}{n_1}\right)^2}{n_1-1} + \frac{\left(\frac{s_2^2}{n_2}\right)^2}{n_2-1}}\]</span></p>
+<p>Según <span class="citation" data-cites="fagerland2012t">@fagerland2012t</span>, esta modificación de los grados de libertad es crucial cuando se trabaja con muestras pequeñas, ya que ajusta la distribución de referencia para compensar la incertidumbre adicional introducida por las varianzas desiguales.</p>
+</section>
+<section id="supuestos-de-la-prueba-t-de-welch" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="supuestos-de-la-prueba-t-de-welch"><span class="header-section-number">2.2</span> Supuestos de la Prueba t de Welch</h2>
+<p>A diferencia de la prueba t de Student estándar, la prueba t de Welch no requiere el supuesto de igualdad de varianzas. Sin embargo, todavía mantiene algunos supuestos importantes:</p>
+<ol type="1">
+<li><strong>Independencia</strong>: Las muestras deben ser independientes entre sí.</li>
+<li><strong>Normalidad</strong>: Las poblaciones de origen deben seguir una distribución aproximadamente normal.</li>
+</ol>
+<p><span class="citation" data-cites="cribbie2012analysis">@cribbie2012analysis</span> destacan que aunque la prueba t de Welch es más robusta frente a violaciones del supuesto de normalidad que la prueba t tradicional, con muestras muy pequeñas (n &lt; 10) es recomendable verificar cuidadosamente este supuesto.</p>
+</section>
+<section id="prueba-de-levene-para-igualdad-de-varianzas" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="prueba-de-levene-para-igualdad-de-varianzas"><span class="header-section-number">2.3</span> Prueba de Levene para Igualdad de Varianzas</h2>
+<p>Antes de decidir qué prueba t utilizar, es común realizar una prueba formal para evaluar la igualdad de varianzas. La prueba de Levene es una de las más utilizadas para este propósito:</p>
+<blockquote class="blockquote">
+<p>“La prueba de Levene es menos sensible a desviaciones de la normalidad que otras pruebas para homogeneidad de varianzas, lo que la hace preferible cuando se trabaja con muestras pequeñas.” <span class="citation" data-cites="gastwirth2009impact">[@gastwirth2009impact]</span></p>
+</blockquote>
+<p>La hipótesis nula de la prueba de Levene es que las varianzas de las poblaciones son iguales:</p>
+<p><span class="math display">\[H_0: \sigma_1^2 = \sigma_2^2\]</span></p>
+<p>Si esta hipótesis se rechaza (p &lt; 0.05), se recomienda utilizar la prueba t de Welch en lugar de la prueba t de Student tradicional.</p>
+</section>
+</section>
+<section id="implementación-en-r" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Implementación en R</h1>
+<section id="preparación-de-los-datos" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="preparación-de-los-datos"><span class="header-section-number">3.1</span> Preparación de los Datos</h2>
+<p>Para ilustrar la aplicación de la prueba t de Welch, utilizaremos un conjunto de datos simulado que representa los resultados de un experimento agrícola donde se comparan los rendimientos de dos variedades de cultivo en parcelas pequeñas.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Generar datos para dos muestras con diferente varianza</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>muestra_A <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">variedad =</span> <span class="st">"Variedad A"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento =</span> <span class="fu">rnorm</span>(<span class="dv">15</span>, <span class="at">mean =</span> <span class="dv">75</span>, <span class="at">sd =</span> <span class="dv">8</span>)  <span class="co"># n=15, media=75, SD=8</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>muestra_B <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">variedad =</span> <span class="st">"Variedad B"</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento =</span> <span class="fu">rnorm</span>(<span class="dv">12</span>, <span class="at">mean =</span> <span class="dv">82</span>, <span class="at">sd =</span> <span class="dv">14</span>)  <span class="co"># n=12, media=82, SD=14</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Combinar los datos</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>datos_rendimiento <span class="ot">&lt;-</span> <span class="fu">rbind</span>(muestra_A, muestra_B)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar los primeros registros</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(datos_rendimiento) <span class="sc">%&gt;%</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Primeros registros del conjunto de datos de rendimiento"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Primeros registros del conjunto de datos de rendimiento</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">variedad</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">rendimiento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">70.51619</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">73.15858</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">87.46967</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">75.56407</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">76.03430</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">88.72052</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+</section>
+<section id="exploración-inicial-de-los-datos" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="exploración-inicial-de-los-datos"><span class="header-section-number">3.2</span> Exploración Inicial de los Datos</h2>
+<p>Antes de realizar la prueba de hipótesis, es importante explorar visualmente los datos y calcular estadísticas descriptivas para cada grupo.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas descriptivas por grupo</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>datos_rendimiento <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(variedad) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">media =</span> <span class="fu">mean</span>(rendimiento),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">desv_est =</span> <span class="fu">sd</span>(rendimiento),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">error_est =</span> desv_est <span class="sc">/</span> <span class="fu">sqrt</span>(n),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">min =</span> <span class="fu">min</span>(rendimiento),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">max =</span> <span class="fu">max</span>(rendimiento),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">varianza =</span> <span class="fu">var</span>(rendimiento)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Estadísticas descriptivas por variedad"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Estadísticas descriptivas por variedad</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">variedad</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">media</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">desv_est</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">error_est</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">min</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">max</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">varianza</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">76.21907</td>
+<td style="text-align: right;">6.762715</td>
+<td style="text-align: right;">1.746125</td>
+<td style="text-align: right;">64.87951</td>
+<td style="text-align: right;">88.72052</td>
+<td style="text-align: right;">45.73431</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variedad B</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">77.37075</td>
+<td style="text-align: right;">15.464147</td>
+<td style="text-align: right;">4.464115</td>
+<td style="text-align: right;">54.46736</td>
+<td style="text-align: right;">107.01678</td>
+<td style="text-align: right;">239.13985</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualización con boxplots</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_rendimiento, <span class="fu">aes</span>(<span class="at">x =</span> variedad, <span class="at">y =</span> rendimiento, <span class="at">fill =</span> variedad)) <span class="sc">+</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="fl">0.2</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_summary</span>(<span class="at">fun =</span> mean, <span class="at">geom =</span> <span class="st">"point"</span>, <span class="at">shape =</span> <span class="dv">18</span>, <span class="at">size =</span> <span class="dv">4</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Comparación de Rendimiento entre Variedades"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Los puntos rojos representan las medias"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Variedad"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Rendimiento (kg/parcela)"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="dd_files/figure-html/exploracion-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="verificación-de-supuestos" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="verificación-de-supuestos"><span class="header-section-number">3.3</span> Verificación de Supuestos</h2>
+<section id="prueba-de-normalidad" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="prueba-de-normalidad"><span class="header-section-number">3.3.1</span> 1. Prueba de Normalidad</h3>
+<p>Verificamos la normalidad de cada grupo utilizando la prueba de Shapiro-Wilk. Esta prueba es especialmente adecuada para muestras pequeñas, como señala <span class="citation" data-cites="razali2011power">@razali2011power</span>.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba de normalidad para cada grupo</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>datos_rendimiento <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(variedad) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">shapiro_p =</span> <span class="fu">shapiro.test</span>(rendimiento)<span class="sc">$</span>p.value,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">es_normal =</span> <span class="fu">ifelse</span>(shapiro_p <span class="sc">&gt;</span> <span class="fl">0.05</span>, <span class="st">"Sí"</span>, <span class="st">"No"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Prueba de normalidad por variedad"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Prueba de normalidad por variedad</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">variedad</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">shapiro_p</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">es_normal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Variedad A</td>
+<td style="text-align: right;">0.5191919</td>
+<td style="text-align: left;">Sí</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Variedad B</td>
+<td style="text-align: right;">0.8816425</td>
+<td style="text-align: left;">Sí</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># QQ-plots para visualizar la normalidad</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_rendimiento, <span class="fu">aes</span>(<span class="at">sample =</span> rendimiento)) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_qq</span>() <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_qq_line</span>() <span class="sc">+</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variedad) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Gráficos Q-Q para Evaluar Normalidad"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Cuantiles teóricos"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Cuantiles observados"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="dd_files/figure-html/normalidad-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="prueba-de-homogeneidad-de-varianzas" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="prueba-de-homogeneidad-de-varianzas"><span class="header-section-number">3.3.2</span> 2. Prueba de Homogeneidad de Varianzas</h3>
+<p>Evaluamos si las varianzas son significativamente diferentes utilizando la prueba de Levene.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba de Levene para homogeneidad de varianzas</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>levene_test <span class="ot">&lt;-</span> car<span class="sc">::</span><span class="fu">leveneTest</span>(rendimiento <span class="sc">~</span> variedad, <span class="at">data =</span> datos_rendimiento)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>levene_test <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Prueba de Levene para homogeneidad de varianzas"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Prueba de Levene para homogeneidad de varianzas</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Df</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">F value</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">group</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6.097096</td>
+<td style="text-align: right;">0.020723</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+</section>
+</section>
+<section id="realización-de-la-prueba-t-de-welch" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="realización-de-la-prueba-t-de-welch"><span class="header-section-number">3.4</span> Realización de la Prueba t de Welch</h2>
+<p>Dado que las varianzas son significativamente diferentes (prueba de Levene con p &lt; 0.05), procedemos a realizar la prueba t de Welch:</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba t de Welch para diferencia de medias</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>welch_test <span class="ot">&lt;-</span> <span class="fu">t.test</span>(rendimiento <span class="sc">~</span> variedad, <span class="at">data =</span> datos_rendimiento, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Resultados detallados</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>welch_test_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">estadistico_t =</span> welch_test<span class="sc">$</span>statistic,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">grados_libertad =</span> welch_test<span class="sc">$</span>parameter,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">valor_p =</span> welch_test<span class="sc">$</span>p.value,</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">media_grupo1 =</span> welch_test<span class="sc">$</span>estimate[<span class="dv">1</span>],</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">media_grupo2 =</span> welch_test<span class="sc">$</span>estimate[<span class="dv">2</span>],</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">diferencia =</span> welch_test<span class="sc">$</span>estimate[<span class="dv">2</span>] <span class="sc">-</span> welch_test<span class="sc">$</span>estimate[<span class="dv">1</span>],</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">IC_inferior =</span> welch_test<span class="sc">$</span>conf.int[<span class="dv">1</span>],</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">IC_superior =</span> welch_test<span class="sc">$</span>conf.int[<span class="dv">2</span>]</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>welch_test_results <span class="sc">%&gt;%</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Resultados de la prueba t de Welch"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Resultados de la prueba t de Welch</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">estadistico_t</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">grados_libertad</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">valor_p</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">media_grupo1</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">media_grupo2</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">diferencia</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IC_inferior</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IC_superior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">t</td>
+<td style="text-align: right;">-0.2402595</td>
+<td style="text-align: right;">14.3593</td>
+<td style="text-align: right;">0.8135252</td>
+<td style="text-align: right;">76.21907</td>
+<td style="text-align: right;">77.37075</td>
+<td style="text-align: right;">1.151675</td>
+<td style="text-align: right;">-11.40855</td>
+<td style="text-align: right;">9.105196</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+</section>
+<section id="interpretación-de-los-resultados" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="interpretación-de-los-resultados"><span class="header-section-number">3.5</span> Interpretación de los Resultados</h2>
+<p>A partir de los resultados de la prueba t de Welch, podemos concluir que existe una diferencia estadísticamente significativa entre los rendimientos medios de las dos variedades (t(14.36) = -0.24, p = 0.814).</p>
+<p>La Variedad B muestra un rendimiento promedio mayor (77.37 kg/parcela) en comparación con la Variedad A (76.22 kg/parcela), con una diferencia media de 1.15 kg/parcela.</p>
+<p>El intervalo de confianza del 95% para la diferencia de medias es [-11.41, 9.11], lo que indica que podemos estar 95% seguros de que la verdadera diferencia de medias poblacionales se encuentra dentro de este rango.</p>
+</section>
+<section id="cálculo-del-tamaño-del-efecto" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="cálculo-del-tamaño-del-efecto"><span class="header-section-number">3.6</span> Cálculo del Tamaño del Efecto</h2>
+<p>Como señala <span class="citation" data-cites="sullivan2012using">@sullivan2012using</span>, la significancia estadística no siempre indica la importancia práctica del hallazgo. Por lo tanto, es recomendable calcular también el tamaño del efecto.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular d de Cohen para el tamaño del efecto</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>cohens_d <span class="ot">&lt;-</span> effectsize<span class="sc">::</span><span class="fu">cohens_d</span>(rendimiento <span class="sc">~</span> variedad, <span class="at">data =</span> datos_rendimiento, <span class="at">pooled_sd =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>cohens_d <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Tamaño del efecto (d de Cohen)"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Tamaño del efecto (d de Cohen)</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">Cohens_d</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CI</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CI_low</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">CI_high</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-0.096498</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">-0.8828152</td>
+<td style="text-align: right;">0.6931408</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interpretación del tamaño del efecto según Cohen</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>interpretacion <span class="ot">&lt;-</span> <span class="fu">case_when</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(cohens_d<span class="sc">$</span>Cohens_d) <span class="sc">&lt;</span> <span class="fl">0.2</span> <span class="sc">~</span> <span class="st">"Efecto pequeño"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(cohens_d<span class="sc">$</span>Cohens_d) <span class="sc">&lt;</span> <span class="fl">0.5</span> <span class="sc">~</span> <span class="st">"Efecto pequeño a mediano"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(cohens_d<span class="sc">$</span>Cohens_d) <span class="sc">&lt;</span> <span class="fl">0.8</span> <span class="sc">~</span> <span class="st">"Efecto mediano a grande"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Efecto grande"</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Según los criterios de Cohen, el tamaño del efecto calculado (d = -0.1) se considera un Efecto pequeño, lo que sugiere que la diferencia observada tiene relevancia práctica.</p>
+</section>
+<section id="cálculo-de-la-potencia-estadística" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="cálculo-de-la-potencia-estadística"><span class="header-section-number">3.7</span> Cálculo de la Potencia Estadística</h2>
+<p>La potencia estadística es especialmente importante cuando se trabaja con muestras pequeñas. Como señala <span class="citation" data-cites="button2013power">@button2013power</span>:</p>
+<blockquote class="blockquote">
+<p>“Los estudios con bajas potencias estadísticas no solo tienen una reducida probabilidad de detectar un efecto real, sino que también reducen la probabilidad de que un efecto detectado refleje una verdadera diferencia.”</p>
+</blockquote>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular potencia estadística post-hoc</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>potencia <span class="ot">&lt;-</span> <span class="fu">pwr.t2n.test</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n1 =</span> <span class="fu">nrow</span>(muestra_A),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n2 =</span> <span class="fu">nrow</span>(muestra_B),</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">d =</span> <span class="fu">as.numeric</span>(cohens_d<span class="sc">$</span>Cohens_d),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">sig.level =</span> <span class="fl">0.05</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">alternative =</span> <span class="st">"two.sided"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  tamaño<span class="at">_muestra_A =</span> <span class="fu">nrow</span>(muestra_A),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  tamaño<span class="at">_muestra_B =</span> <span class="fu">nrow</span>(muestra_B),</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  tamaño<span class="at">_efecto =</span> <span class="fu">as.numeric</span>(cohens_d<span class="sc">$</span>Cohens_d),</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">nivel_significancia =</span> <span class="fl">0.05</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">potencia =</span> potencia<span class="sc">$</span>power</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Análisis de potencia estadística"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Análisis de potencia estadística</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;" data-quarto-table-cell-role="th">tamaño_muestra_A</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">tamaño_muestra_B</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">tamaño_efecto</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">nivel_significancia</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">potencia</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">-0.096498</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.0566095</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Con una potencia de 0.06, tenemos aproximadamente 6% de probabilidad de detectar una diferencia real cuando esta existe.</p>
+</section>
+</section>
+<section id="comparación-con-la-prueba-t-de-student-tradicional" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Comparación con la Prueba t de Student Tradicional</h1>
+<p>Es interesante comparar los resultados de la prueba t de Welch con los que obtendríamos utilizando la prueba t de Student tradicional (que asume varianzas iguales). <span class="citation" data-cites="moser1992importance">@moser1992importance</span> señala que ignorar la desigualdad de varianzas puede llevar a conclusiones erróneas, especialmente cuando los tamaños de muestra son desiguales.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba t de Student (asumiendo varianzas iguales)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>student_test <span class="ot">&lt;-</span> <span class="fu">t.test</span>(rendimiento <span class="sc">~</span> variedad, <span class="at">data =</span> datos_rendimiento, <span class="at">var.equal =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>comparacion <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">prueba =</span> <span class="fu">c</span>(<span class="st">"t de Welch"</span>, <span class="st">"t de Student"</span>),</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">valor_t =</span> <span class="fu">c</span>(welch_test<span class="sc">$</span>statistic, student_test<span class="sc">$</span>statistic),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">grados_libertad =</span> <span class="fu">c</span>(welch_test<span class="sc">$</span>parameter, student_test<span class="sc">$</span>parameter),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">valor_p =</span> <span class="fu">c</span>(welch_test<span class="sc">$</span>p.value, student_test<span class="sc">$</span>p.value),</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">IC_inferior =</span> <span class="fu">c</span>(welch_test<span class="sc">$</span>conf.int[<span class="dv">1</span>], student_test<span class="sc">$</span>conf.int[<span class="dv">1</span>]),</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">IC_superior =</span> <span class="fu">c</span>(welch_test<span class="sc">$</span>conf.int[<span class="dv">2</span>], student_test<span class="sc">$</span>conf.int[<span class="dv">2</span>])</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>comparacion <span class="sc">%&gt;%</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Comparación entre prueba t de Welch y prueba t de Student"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Comparación entre prueba t de Welch y prueba t de Student</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">prueba</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">valor_t</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">grados_libertad</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">valor_p</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IC_inferior</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IC_superior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">t de Welch</td>
+<td style="text-align: right;">-0.2402595</td>
+<td style="text-align: right;">14.3593</td>
+<td style="text-align: right;">0.8135252</td>
+<td style="text-align: right;">-11.40855</td>
+<td style="text-align: right;">9.105196</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">t de Student</td>
+<td style="text-align: right;">-0.2599717</td>
+<td style="text-align: right;">25.0000</td>
+<td style="text-align: right;">0.7970147</td>
+<td style="text-align: right;">-10.27543</td>
+<td style="text-align: right;">7.972084</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<p>Como se puede observar, en este caso la prueba t de Student proporciona resultados ligeramente diferentes a los de la prueba t de Welch, especialmente en términos de grados de libertad y el intervalo de confianza. Esta diferencia demuestra la importancia de seleccionar la prueba apropiada según las características de los datos.</p>
+</section>
+<section id="aplicación-a-un-caso-real-análisis-de-rendimiento-de-cultivos" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Aplicación a un Caso Real: Análisis de Rendimiento de Cultivos</h1>
+<p>Para ilustrar la aplicación de estas técnicas en un contexto real, consideremos el siguiente escenario:</p>
+<p>Un investigador agrícola está evaluando el efecto de un nuevo fertilizante orgánico en el rendimiento de trigo. Se establecieron parcelas de prueba pequeñas y se asignaron aleatoriamente a dos tratamientos: fertilizante convencional (control) y nuevo fertilizante orgánico (tratamiento). Debido a limitaciones logísticas, solo se pudieron establecer 14 parcelas para el control y 11 para el tratamiento.</p>
+<div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar datos desde archivo CSV (simulados para este ejemplo)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># En un caso real, utilizaríamos: datos_trigo &lt;- read.csv("datos_trigo.csv")</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulación de datos para el ejemplo</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">456</span>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>datos_trigo <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">tratamiento =</span> <span class="fu">c</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"Convencional"</span>, <span class="dv">14</span>),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(<span class="st">"Orgánico"</span>, <span class="dv">11</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">rendimiento =</span> <span class="fu">c</span>(</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rnorm</span>(<span class="dv">14</span>, <span class="at">mean =</span> <span class="fl">3.8</span>, <span class="at">sd =</span> <span class="fl">0.4</span>),  <span class="co"># Convencional: mayor uniformidad</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rnorm</span>(<span class="dv">11</span>, <span class="at">mean =</span> <span class="fl">4.3</span>, <span class="at">sd =</span> <span class="fl">0.7</span>)   <span class="co"># Orgánico: mayor variabilidad</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar los datos</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(datos_trigo, <span class="fu">aes</span>(<span class="at">x =</span> tratamiento, <span class="at">y =</span> rendimiento, <span class="at">fill =</span> tratamiento)) <span class="sc">+</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="fl">0.2</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_summary</span>(<span class="at">fun =</span> mean, <span class="at">geom =</span> <span class="st">"point"</span>, <span class="at">shape =</span> <span class="dv">18</span>, <span class="at">size =</span> <span class="dv">4</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Comparación de Rendimiento entre Tratamientos"</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Fertilizante Convencional vs. Orgánico"</span>,</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Tratamiento"</span>,</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Rendimiento (ton/ha)"</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="dd_files/figure-html/caso-real-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas descriptivas</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>datos_trigo <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(tratamiento) <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">media =</span> <span class="fu">mean</span>(rendimiento),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">desv_est =</span> <span class="fu">sd</span>(rendimiento),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">varianza =</span> <span class="fu">var</span>(rendimiento),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">error_est =</span> desv_est <span class="sc">/</span> <span class="fu">sqrt</span>(n)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Estadísticas descriptivas por tratamiento"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Estadísticas descriptivas por tratamiento</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">tratamiento</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">media</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">desv_est</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">varianza</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">error_est</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Convencional</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">3.891758</td>
+<td style="text-align: right;">0.3968266</td>
+<td style="text-align: right;">0.1574714</td>
+<td style="text-align: right;">0.1060564</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Orgánico</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">4.491071</td>
+<td style="text-align: right;">1.0152212</td>
+<td style="text-align: right;">1.0306742</td>
+<td style="text-align: right;">0.3061007</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba de Levene para homogeneidad de varianzas</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>levene_trigo <span class="ot">&lt;-</span> car<span class="sc">::</span><span class="fu">leveneTest</span>(rendimiento <span class="sc">~</span> tratamiento, <span class="at">data =</span> datos_trigo)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>levene_trigo <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kbl</span>(<span class="at">caption =</span> <span class="st">"Prueba de Levene para homogeneidad de varianzas"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">"striped"</span>, <span class="st">"hover"</span>, <span class="st">"condensed"</span>), <span class="at">full_width =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-striped table-hover table-condensed caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Prueba de Levene para homogeneidad de varianzas</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th"></th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Df</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">F value</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Pr(&gt;F)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">group</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">9.838796</td>
+<td style="text-align: right;">0.0046267</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">NA</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba t de Welch</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>welch_trigo <span class="ot">&lt;-</span> <span class="fu">t.test</span>(rendimiento <span class="sc">~</span> tratamiento, <span class="at">data =</span> datos_trigo, <span class="at">var.equal =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>welch_trigo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; 
+#&gt;  Welch Two Sample t-test
+#&gt; 
+#&gt; data:  rendimiento by tratamiento
+#&gt; t = -1.85, df = 12.407, p-value = 0.08826
+#&gt; alternative hypothesis: true difference in means between group Convencional and group Orgánico is not equal to 0
+#&gt; 95 percent confidence interval:
+#&gt;  -1.302584  0.103958
+#&gt; sample estimates:
+#&gt; mean in group Convencional     mean in group Orgánico 
+#&gt;                   3.891758                   4.491071</code></pre>
+</div>
+</div>
+<section id="interpretación-del-caso-real" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="interpretación-del-caso-real"><span class="header-section-number">5.1</span> Interpretación del Caso Real</h2>
+<p>Los resultados muestran una diferencia estadísticamente significativa (t = -1.85, gl = 12.41, p = 0.0883) en el rendimiento medio entre el fertilizante convencional (3.89 ton/ha) y el orgánico (4.49 ton/ha).</p>
+<p>El intervalo de confianza del 95% para la diferencia de medias es [-1.3, 0.1] ton/ha, lo que indica que el fertilizante orgánico produce un incremento significativo en el rendimiento.</p>
+<p>Estos resultados son especialmente confiables porque hemos utilizado la prueba t de Welch, que es apropiada para esta situación donde las varianzas son diferentes, como se confirma con la prueba de Levene (p = 0.00463).</p>
+</section>
+</section>
+<section id="recomendaciones-prácticas" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Recomendaciones Prácticas</h1>
+<p>Basándose en la literatura científica y en los ejemplos presentados, se pueden extraer las siguientes recomendaciones prácticas para el análisis de diferencias de medias con muestras pequeñas y varianzas diferentes:</p>
+<ol type="1">
+<li><p><strong>Siempre verificar los supuestos</strong>:</p>
+<ul>
+<li>Normalidad: Prueba de Shapiro-Wilk y gráficos Q-Q</li>
+<li>Homogeneidad de varianzas: Prueba de Levene</li>
+</ul></li>
+<li><p><strong>Preferir la prueba t de Welch</strong>: Como sugieren <span class="citation" data-cites="delacre2017psychologists">@delacre2017psychologists</span>, la prueba t de Welch debería ser la opción predeterminada para comparar dos medias independientes, incluso cuando las varianzas parecen similares.</p></li>
+<li><p><strong>Complementar con estadísticas descriptivas</strong>: Los diagramas de caja, histogramas y estadísticas resumidas ayudan a entender la naturaleza de los datos más allá de la prueba de hipótesis.</p></li>
+<li><p><strong>Reportar el tamaño del efecto</strong>: La d de Cohen u otras medidas de tamaño del efecto proporcionan información sobre la magnitud de la diferencia, complementando la significancia estadística.</p></li>
+<li><p><strong>Considerar la potencia estadística</strong>: Con muestras pequeñas, es crucial evaluar si el estudio tiene suficiente potencia para detectar el efecto de interés.</p></li>
+<li><p><strong>Interpretar los resultados con cautela</strong>: Reconocer las limitaciones de las muestras pequeñas y considerar los resultados en el contexto más amplio del campo de estudio.</p></li>
+</ol>
+</section>
+<section id="conclusiones" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Conclusiones</h1>
+<p>Las pruebas de diferencia de medias para muestras pequeñas con varianzas diferentes presentan desafíos particulares que requieren un enfoque estadístico cuidadoso. La prueba t de Welch ofrece una solución robusta a este problema, permitiendo realizar inferencias válidas incluso cuando no se cumple el supuesto de homogeneidad de varianzas.</p>
+<p>Como señala <span class="citation" data-cites="ruxton2006unequal">@ruxton2006unequal</span>:</p>
+<blockquote class="blockquote">
+<p>“La prueba t modificada de Welch resuelve el problema de la prueba t de Student cuando se violan los supuestos de igualdad de varianzas, sin sacrificar potencia estadística.”</p>
+</blockquote>
+<p>En el contexto de investigaciones con restricciones logísticas o éticas que limitan el tamaño de las muestras, es fundamental aplicar las técnicas estadísticas apropiadas y reportar los resultados de manera transparente, reconociendo tanto las fortalezas como las limitaciones del análisis.</p>
+</section>
+<section id="referencias" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Referencias</h1>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
