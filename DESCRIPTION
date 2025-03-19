@@ -14,8 +14,10 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     ggplot2,
-    stats,
-    scales
+    scales,
+    dplyr,
+    kableExtra,
+    stats
 Suggests:
     testthat (>= 3.0.0),
     knitr,
