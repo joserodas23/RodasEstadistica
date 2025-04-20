@@ -2,5 +2,6 @@
 
 export(graficar_distribucion)
 export(tabla_descriptivo)
+export(tabla_frecuencia)
 import(dplyr)
 import(kableExtra)
