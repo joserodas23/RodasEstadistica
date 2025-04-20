@@ -13,6 +13,8 @@
 #' @param grafico Tipo de gráfico a generar: "ninguno", "histograma", "poligono", "ojiva", o "todos"
 #' @param color_grafico Color principal para los gráficos (por defecto "steelblue")
 #' @param titulo_grafico Título para los gráficos (por defecto NULL, usa un título genérico)
+#' @param intervalo_cerrado Lógico. Si TRUE, usa formato [a b] para intervalos cerrados en ambos extremos
+#' @param labels Vector de caracteres con etiquetas personalizadas para los intervalos
 #'
 #' @return Una lista con dos elementos: tabla (data frame con la tabla de frecuencias) y graficos (lista de objetos ggplot si se solicitaron)
 #'
@@ -41,6 +43,14 @@
 #'                  color_grafico = "darkblue",
 #'                  titulo_grafico = "Análisis de mi variable")
 #'
+#' # Usar intervalos cerrados en ambos extremos [a b]
+#' tabla_frecuencia(datos_ejemplo, intervalo_cerrado = TRUE)
+#'
+#' # Usar etiquetas personalizadas
+#' tabla_frecuencia(datos_ejemplo, metodo = "manual",
+#'                  breaks = c(0, 8, 15, 25),
+#'                  labels = c("[0 8]", "[9 15]", "[16 25]"))
+#'
 #' @export
 tabla_frecuencia <- function(datos,
                              k = 5,
@@ -51,7 +61,9 @@ tabla_frecuencia <- function(datos,
                              color_encabezado = "steelblue",
                              grafico = "ninguno",
                              color_grafico = "steelblue",
-                             titulo_grafico = NULL) {
+                             titulo_grafico = NULL,
+                             intervalo_cerrado = FALSE,
+                             labels = NULL) {
 
   # Validar parámetros
   if (!is.numeric(datos)) {
@@ -94,9 +106,23 @@ tabla_frecuencia <- function(datos,
   options(scipen = 999)
 
   # Crear etiquetas de intervalos
-  etiquetas_intervalos <- paste0("(", round(head(puntos_corte, -1), digitos),
-                                 " - ",
-                                 round(tail(puntos_corte, -1), digitos), "]")
+  if (metodo == "manual" && !is.null(labels)) {
+    # Si se proporcionan etiquetas personalizadas, usarlas
+    etiquetas_intervalos <- labels
+  } else {
+    # Determinar el tipo de formato de intervalo a usar
+    if (intervalo_cerrado) {
+      # Formato [a b]
+      etiquetas_intervalos <- paste0("[", round(head(puntos_corte, -1), digitos),
+                                     " ",
+                                     round(tail(puntos_corte, -1), digitos), "]")
+    } else {
+      # Formato tradicional (a - b]
+      etiquetas_intervalos <- paste0("(", round(head(puntos_corte, -1), digitos),
+                                     " - ",
+                                     round(tail(puntos_corte, -1), digitos), "]")
+    }
+  }
 
   # Crear intervalos y calcular frecuencias
   intervalos <- cut(datos,

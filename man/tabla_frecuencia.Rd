@@ -14,7 +14,9 @@ tabla_frecuencia(
   color_encabezado = "steelblue",
   grafico = "ninguno",
   color_grafico = "steelblue",
-  titulo_grafico = NULL
+  titulo_grafico = NULL,
+  intervalo_cerrado = FALSE,
+  labels = NULL
 )
 }
 \arguments{
@@ -37,6 +39,10 @@ tabla_frecuencia(
 \item{color_grafico}{Color principal para los gráficos (por defecto "steelblue")}
 
 \item{titulo_grafico}{Título para los gráficos (por defecto NULL, usa un título genérico)}
+
+\item{intervalo_cerrado}{Lógico. Si TRUE, usa formato \link{a b} para intervalos cerrados en ambos extremos}
+
+\item{labels}{Vector de caracteres con etiquetas personalizadas para los intervalos}
 }
 \value{
 Una lista con dos elementos: tabla (data frame con la tabla de frecuencias) y graficos (lista de objetos ggplot si se solicitaron)
@@ -69,5 +75,13 @@ tabla_frecuencia(datos_ejemplo, grafico = "histograma")
 tabla_frecuencia(datos_ejemplo, grafico = "todos",
                  color_grafico = "darkblue",
                  titulo_grafico = "Análisis de mi variable")
+
+# Usar intervalos cerrados en ambos extremos [a b]
+tabla_frecuencia(datos_ejemplo, intervalo_cerrado = TRUE)
+
+# Usar etiquetas personalizadas
+tabla_frecuencia(datos_ejemplo, metodo = "manual",
+                 breaks = c(0, 8, 15, 25),
+                 labels = c("[0 8]", "[9 15]", "[16 25]"))
 
 }
