@@ -13,8 +13,13 @@
 #' @param grafico Tipo de gráfico a generar: "ninguno", "histograma", "poligono", "ojiva", o "todos"
 #' @param color_grafico Color principal para los gráficos (por defecto "steelblue")
 #' @param titulo_grafico Título para los gráficos (por defecto NULL, usa un título genérico)
+#' @param subtitulo_grafico Subtítulo para los gráficos (por defecto NULL)
+#' @param caption_grafico Caption (pie de gráfico) para los gráficos (por defecto NULL)
+#' @param eje_x_nombre Nombre personalizado para el eje X (por defecto NULL, usa nombres genéricos)
+#' @param eje_y_nombre Nombre personalizado para el eje Y (por defecto NULL, usa nombres genéricos)
 #' @param intervalo_cerrado Lógico. Si TRUE, usa formato [a b] para intervalos cerrados en ambos extremos
 #' @param labels Vector de caracteres con etiquetas personalizadas para los intervalos
+#' @param formato_tabla Formato para la tabla: "html", "markdown", "latex" o "simple" (por defecto "html")
 #'
 #' @return Una lista con dos elementos: tabla (data frame con la tabla de frecuencias) y graficos (lista de objetos ggplot si se solicitaron)
 #'
@@ -48,7 +53,7 @@
 #'
 #' # Usar etiquetas personalizadas
 #' tabla_frecuencia(datos_ejemplo, metodo = "manual",
-#'                  breaks = c(0, 8, 15, 25),
+#'                  breaks = c(20, 30, 40, 50, 60, 70, 80),
 #'                  labels = c("[0 8]", "[9 15]", "[16 25]"))
 #'
 #' @export
@@ -62,8 +67,13 @@ tabla_frecuencia <- function(datos,
                              grafico = "ninguno",
                              color_grafico = "steelblue",
                              titulo_grafico = NULL,
+                             subtitulo_grafico = NULL,
+                             caption_grafico = NULL,
+                             eje_x_nombre = NULL,
+                             eje_y_nombre = NULL,
                              intervalo_cerrado = FALSE,
-                             labels = NULL) {
+                             labels = NULL,
+                             formato_tabla = "html") {
 
   # Validar parámetros
   if (!is.numeric(datos)) {
@@ -95,11 +105,31 @@ tabla_frecuencia <- function(datos,
   if (metodo == "manual") {
     puntos_corte <- breaks
   } else if (metodo == "sturges") {
-    puntos_corte <- hist(datos, breaks = k, plot = FALSE)$breaks
+    # Usar exactamente k intervalos en lugar de usar la implementación de hist()
+    rango <- range(datos)
+    ancho <- (rango[2] - rango[1]) / k
+    puntos_corte <- seq(from = rango[1], to = rango[2], by = ancho)
+
+    # Asegurar que tengamos exactamente k+1 puntos de corte
+    if (length(puntos_corte) != k + 1) {
+      puntos_corte <- seq(from = rango[1], to = rango[2], length.out = k + 1)
+    }
   } else if (metodo == "fd") {
     puntos_corte <- hist(datos, breaks = "FD", plot = FALSE)$breaks
+
+    # Ajustar para tener exactamente k intervalos si es posible
+    if (length(puntos_corte) - 1 != k) {
+      rango <- range(datos)
+      puntos_corte <- seq(from = rango[1], to = rango[2], length.out = k + 1)
+    }
   } else if (metodo == "scott") {
     puntos_corte <- hist(datos, breaks = "scott", plot = FALSE)$breaks
+
+    # Ajustar para tener exactamente k intervalos si es posible
+    if (length(puntos_corte) - 1 != k) {
+      rango <- range(datos)
+      puntos_corte <- seq(from = rango[1], to = rango[2], length.out = k + 1)
+    }
   }
 
   # Evitar notación científica
@@ -147,15 +177,26 @@ tabla_frecuencia <- function(datos,
 
   # Si se solicita mostrar la tabla formateada
   if (mostrar_tabla && requireNamespace("kableExtra", quietly = TRUE)) {
+    # Crear la tabla formateada
     tabla_mostrada <- kableExtra::kbl(
       tabla_final,
       col.names = c("Intervalo", "Marca de clase", "fi", "Fi", paste0("hi", "%"), paste0("Hi", "%")),
-      align = "c"
-    ) %>%
-      kableExtra::kable_styling(full_width = FALSE, position = "center") %>%
-      kableExtra::row_spec(0, background = color_encabezado, color = "white")
+      align = c("l", "c", "c", "c", "c", "c"),  # Primera columna a la izquierda, resto centradas
+      format = formato_tabla  # Usar el formato especificado
+    )
 
+    # Aplicar estilo según el formato
+    if (formato_tabla %in% c("html", "markdown", "latex")) {
+      tabla_mostrada <- tabla_mostrada %>%
+        kableExtra::kable_styling(full_width = FALSE, position = "center") %>%
+        kableExtra::row_spec(0, background = color_encabezado, color = "white")
+    }
+
+    # SIEMPRE imprimir la tabla, independientemente del entorno
     print(tabla_mostrada)
+  } else if (mostrar_tabla) {
+    # Si kableExtra no está disponible, mostrar la tabla básica
+    print(tabla_final)
   }
 
   # Crear gráficos si se solicitan
@@ -173,14 +214,23 @@ tabla_frecuencia <- function(datos,
                               fill = color_grafico,
                               color = "white",
                               alpha = 0.7) +
-      ggplot2::labs(title = titulo_hist,
-                    x = "Valor",
-                    y = "Frecuencia") +
+      ggplot2::labs(
+        title = titulo_hist,
+        subtitle = subtitulo_grafico,
+        caption = caption_grafico,
+        x = ifelse(is.null(eje_x_nombre), "Valor", eje_x_nombre),
+        y = ifelse(is.null(eje_y_nombre), "Frecuencia", eje_y_nombre)
+      ) +
       ggplot2::theme_minimal() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic")
+      )
 
     graficos$histograma <- p_hist
 
+    # Mostrar el gráfico si se solicita
     if (mostrar_tabla) {
       print(p_hist)
     }
@@ -196,14 +246,23 @@ tabla_frecuencia <- function(datos,
     p_pol <- ggplot2::ggplot(tabla_final, ggplot2::aes(x = xi, y = fi)) +
       ggplot2::geom_line(color = color_grafico, linewidth = 1) +
       ggplot2::geom_point(color = color_grafico, size = 3) +
-      ggplot2::labs(title = titulo_pol,
-                    x = "Marca de clase",
-                    y = "Frecuencia absoluta") +
+      ggplot2::labs(
+        title = titulo_pol,
+        subtitle = subtitulo_grafico,
+        caption = caption_grafico,
+        x = ifelse(is.null(eje_x_nombre), "Marca de clase", eje_x_nombre),
+        y = ifelse(is.null(eje_y_nombre), "Frecuencia absoluta", eje_y_nombre)
+      ) +
       ggplot2::theme_minimal() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic")
+      )
 
     graficos$poligono <- p_pol
 
+    # Mostrar el gráfico si se solicita
     if (mostrar_tabla) {
       print(p_pol)
     }
@@ -219,14 +278,23 @@ tabla_frecuencia <- function(datos,
     p_ojiva <- ggplot2::ggplot(tabla_final, ggplot2::aes(x = xi, y = Fi)) +
       ggplot2::geom_line(color = color_grafico, linewidth = 1) +
       ggplot2::geom_point(color = color_grafico, size = 3) +
-      ggplot2::labs(title = titulo_ojiva,
-                    x = "Marca de clase",
-                    y = "Frecuencia acumulada") +
+      ggplot2::labs(
+        title = titulo_ojiva,
+        subtitle = subtitulo_grafico,
+        caption = caption_grafico,
+        x = ifelse(is.null(eje_x_nombre), "Marca de clase", eje_x_nombre),
+        y = ifelse(is.null(eje_y_nombre), "Frecuencia acumulada", eje_y_nombre)
+      ) +
       ggplot2::theme_minimal() +
-      ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic")
+      )
 
     graficos$ojiva <- p_ojiva
 
+    # Mostrar el gráfico si se solicita
     if (mostrar_tabla) {
       print(p_ojiva)
     }
@@ -238,5 +306,13 @@ tabla_frecuencia <- function(datos,
     graficos = graficos
   )
 
-  return(resultado)
+  # Si estamos en un documento que se está renderizando o si se especifica
+  # no mostrar el resultado en consola, devolver solo el resultado sin imprimir estructura
+  if (!mostrar_tabla || formato_tabla == "html") {
+    # Retornar sin mostrar la estructura del objeto
+    invisible(resultado)
+  } else {
+    # Para la consola, devolver visible el resultado (comportamiento tradicional)
+    return(resultado)
+  }
 }

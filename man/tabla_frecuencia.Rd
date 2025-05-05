@@ -15,8 +15,13 @@ tabla_frecuencia(
   grafico = "ninguno",
   color_grafico = "steelblue",
   titulo_grafico = NULL,
+  subtitulo_grafico = NULL,
+  caption_grafico = NULL,
+  eje_x_nombre = NULL,
+  eje_y_nombre = NULL,
   intervalo_cerrado = FALSE,
-  labels = NULL
+  labels = NULL,
+  formato_tabla = "html"
 )
 }
 \arguments{
@@ -40,9 +45,19 @@ tabla_frecuencia(
 
 \item{titulo_grafico}{Título para los gráficos (por defecto NULL, usa un título genérico)}
 
+\item{subtitulo_grafico}{Subtítulo para los gráficos (por defecto NULL)}
+
+\item{caption_grafico}{Caption (pie de gráfico) para los gráficos (por defecto NULL)}
+
+\item{eje_x_nombre}{Nombre personalizado para el eje X (por defecto NULL, usa nombres genéricos)}
+
+\item{eje_y_nombre}{Nombre personalizado para el eje Y (por defecto NULL, usa nombres genéricos)}
+
 \item{intervalo_cerrado}{Lógico. Si TRUE, usa formato \link{a b} para intervalos cerrados en ambos extremos}
 
 \item{labels}{Vector de caracteres con etiquetas personalizadas para los intervalos}
+
+\item{formato_tabla}{Formato para la tabla: "html", "markdown", "latex" o "simple" (por defecto "html")}
 }
 \value{
 Una lista con dos elementos: tabla (data frame con la tabla de frecuencias) y graficos (lista de objetos ggplot si se solicitaron)
@@ -81,7 +96,7 @@ tabla_frecuencia(datos_ejemplo, intervalo_cerrado = TRUE)
 
 # Usar etiquetas personalizadas
 tabla_frecuencia(datos_ejemplo, metodo = "manual",
-                 breaks = c(0, 8, 15, 25),
+                 breaks = c(20, 30, 40, 50, 60, 70, 80),
                  labels = c("[0 8]", "[9 15]", "[16 25]"))
 
 }
