@@ -1,0 +1,135 @@
+---
+title: "Determinantes Macroeconómicos del Crecimiento del PIB: Un Análisis de Regresión Múltiple"
+author: "Rodas Cobos Jose Luis"
+format: 
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    highlight-style: github
+    theme: litera
+    mainfont: 'Segoe UI, Helvetica, Arial, sans-serif'
+    css: styles.css
+    self-contained: true
+    html-math-method: katex
+    fig-format: png
+    fig-width: 6
+    fig-height: 4
+    fig-responsive: true
+    anchor-sections: true
+    smooth-scroll: true
+    page-layout: article
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    fig-width: 7
+    fig-height: 5
+    geometry: margin=1in
+    colorlinks: true
+    pdf-engine: xelatex
+editor: visual
+execute:
+  echo: false
+  warning: false
+  message: false
+  error: false
+  freeze: auto
+editor_options: 
+  chunk_output_type: inline
+---
+
+Librerias
+
+```{r}
+# Carga de librerías necesarias para el análisis
+library(tidyverse)      # Para manipulación de datos
+library(corrplot)       # Para gráficos de correlación
+library(car)            # Para diagnóstico de regresión
+library(lmtest)         # Para pruebas de supuestos
+library(sandwich)       # Para errores estándar robustos
+library(MASS)           # Para regresión robusta
+library(lm.beta)        # Para coeficientes estandarizados
+library(relaimpo)       # Para importancia relativa de predictores
+library(knitr)          # Para tablas
+library(kableExtra)     # Para mejorar tablas
+library(patchwork)      # Para combinar gráficos
+library(boot)           # Para bootstrap
+library(caret)          # Para validación cruzada
+library(GGally)         # Para ggpairs
+library(olsrr)          # Para selección de modelos
+library(forestmodel)    # Para forest plots
+library(performance)    # Para diagnóstico del modelo
+library(broom)          # Para extraer resultados del modelo en formato tidy
+```
+
+**Base**
+
+```{r}
+# Simulamos datos para 40 países (promedio del período 2015-2020)
+set.seed(123) # Para reproducibilidad
+
+# Creamos dataset con relaciones económicas realistas
+n <- 40 # Número de países
+
+# Variables con rangos realistas y correlaciones apropiadas
+inversion <- rnorm(n, mean = 5, sd = 2.5)  # IED (% del PIB)
+gasto_publico <- rnorm(n, mean = 35, sd = 8) # Gasto público (% PIB)
+inflacion <- abs(rnorm(n, mean = 3, sd = 2)) # Inflación (%)
+desempleo <- abs(rnorm(n, mean = 6, sd = 3)) # Desempleo (%)
+apertura_comercial <- rnorm(n, mean = 80, sd = 30) # (X+M)/PIB (%)
+
+# Creamos crecimiento PIB con relación conocida:
+# - Positiva con inversión y apertura
+# - Negativa con inflación y desempleo
+# - Relación no lineal con gasto público (curva en U invertida)
+crecimiento_pib <- 3 + 0.4*inversion - 0.03*(gasto_publico-30)^2 - 
+                    0.3*inflacion - 0.2*desempleo + 
+                    0.02*apertura_comercial + rnorm(n, 0, 0.8)
+
+# Armamos el dataset final
+datos_economicos <- data.frame(
+  pais = paste0("País_", 1:n),
+  crecimiento_pib = crecimiento_pib,
+  inversion = inversion,
+  gasto_publico = gasto_publico,
+  inflacion = inflacion,
+  desempleo = desempleo,
+  apertura_comercial = apertura_comercial
+)
+
+# Añadimos algunos outliers para evaluar robustez
+datos_economicos$inversion[5] <- 15  # Outlier en inversión
+datos_economicos$inflacion[10] <- 12 # Outlier en inflación
+datos_economicos$crecimiento_pib[15] <- -2 # Outlier en variable dependiente
+```
+
+## Estadística  Descriptiva
+
+```{r}
+# Función personalizada para calcular la moda
+calcular_moda <- function(x) {
+  uniqx <- unique(x)
+  uniqx[which.max(tabulate(match(x, uniqx)))]
+}
+
+# Estadísticas descriptivas ampliadas
+estadisticas <- data.frame(
+  Variable = names(datos_economicos)[-1], # Excluimos la columna país
+  Media = sapply(datos_economicos[-1], mean),
+  Mediana = sapply(datos_economicos[-1], median),
+  DE = sapply(datos_economicos[-1], sd),
+  Min = sapply(datos_economicos[-1], min),
+  Max = sapply(datos_economicos[-1], max),
+  Asimetria = sapply(datos_economicos[-1], function(x) moments::skewness(x)),
+  Curtosis = sapply(datos_economicos[-1], function(x) moments::kurtosis(x))
+)
+
+kable(estadisticas, 
+      caption = "Estadísticas descriptivas de las variables",
+      digits = 2,
+      booktabs = TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
