@@ -291,13 +291,16 @@ graficos_cuantitativos <- function(datos = NULL,
 
   # ── BOXPLOT ───────────────────────────────────────────────────────────────────
   # ── BOXPLOT ───────────────────────────────────────────────────────────────────
+  # ── BOXPLOT ───────────────────────────────────────────────────────────────────
   if (grafico %in% c("boxplot", "todos") && !is.null(datos_originales)) {
     titulo_box <- ifelse(is.null(titulo_grafico),
                          "Diagrama de cajas",
                          paste0(titulo_grafico, " - Diagrama de cajas"))
 
-    p_box <- ggplot2::ggplot(data.frame(x = "", valor = datos_originales),
-                             ggplot2::aes(x = x, y = valor)) +
+    # Crear el data frame con columna x para evitar errores
+    df_box <- data.frame(x = "", valor = datos_originales)
+
+    p_box <- ggplot2::ggplot(df_box, ggplot2::aes(x = x, y = valor)) +
       ggplot2::geom_boxplot(fill = color_grafico, alpha = 0.7, width = 0.5) +
       ggplot2::coord_flip() +
       ggplot2::labs(
@@ -318,9 +321,9 @@ graficos_cuantitativos <- function(datos = NULL,
 
     if (mostrar_datos_boxplot) {
       p_box <- p_box +
-        ggplot2::geom_jitter(ggplot2::aes(x = x, y = valor),  # ← AÑADIR aes() aquí
-                             width = 0.2, height = 0, alpha = 0.5,
-                             color = color_secundario, size = 1.5)
+        ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.5,
+                             color = color_secundario, size = 1.5,
+                             inherit.aes = TRUE)  # Heredar las estéticas del ggplot principal
     }
 
     if (mostrar_media_boxplot) {
