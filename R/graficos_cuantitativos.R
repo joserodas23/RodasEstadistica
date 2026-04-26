@@ -1,7 +1,8 @@
 #' Crea gráficos para visualizar datos cuantitativos agrupados en intervalos
 #'
 #' Esta función genera gráficos para una variable continua, incluyendo histograma,
-#' polígono de frecuencias, ojiva (frecuencias acumuladas) y diagrama de cajas.
+#' polígono de frecuencias, ojiva (frecuencias acumuladas), diagrama de cajas,
+#' gráfico de densidad, Q-Q plot y diagrama de violín.
 #'
 #' @param datos Vector numérico con los datos a analizar o resultado de tabla_cuantitativa
 #' @param k Número de intervalos o clases deseados (por defecto 5, solo si datos es un vector)
@@ -9,19 +10,20 @@
 #' @param breaks Vector de puntos de corte (solo si metodo="manual" y datos es un vector)
 #' @param puntos_corte Vector de puntos de corte (alternativa a breaks)
 #' @param tabla_datos Data frame con la tabla de frecuencias (alternativa a datos)
-#' @param grafico Tipo de gráfico a generar: "histograma", "poligono", "poligono_barras", "ojiva", "boxplot" o "todos" (por defecto "histograma")
+#' @param grafico Tipo de gráfico: "histograma", "poligono", "poligono_barras", "ojiva", "boxplot", "densidad", "qqplot", "violin" o "todos"
 #' @param color_grafico Color principal para los gráficos (por defecto "steelblue")
-#' @param color_secundario Color secundario para elementos adicionales en los gráficos (por defecto "tomato")
+#' @param color_secundario Color secundario para elementos adicionales (por defecto "tomato")
 #' @param titulo_grafico Título para los gráficos (por defecto NULL, usa un título genérico)
 #' @param subtitulo_grafico Subtítulo para los gráficos (por defecto NULL)
 #' @param caption_grafico Caption (pie de gráfico) para los gráficos (por defecto NULL)
-#' @param eje_x_nombre Nombre personalizado para el eje X (por defecto NULL, usa nombres genéricos)
-#' @param eje_y_nombre Nombre personalizado para el eje Y (por defecto NULL, usa nombres genéricos)
+#' @param eje_x_nombre Nombre personalizado para el eje X (por defecto NULL)
+#' @param eje_y_nombre Nombre personalizado para el eje Y (por defecto NULL)
 #' @param mostrar_grafico Lógico. Si TRUE, muestra el gráfico inmediatamente
-#' @param tema_grafico Tema de ggplot2 a utilizar (por defecto "minimal")
-#' @param mostrar_datos_boxplot Lógico. Si TRUE, muestra los puntos de datos en el diagrama de cajas (por defecto TRUE)
-#' @param mostrar_media_boxplot Lógico. Si TRUE, muestra la media en el diagrama de cajas (por defecto TRUE)
-#' @param formato_salida Formato para devolver los resultados: "grafico", "datos" o "ambos" (por defecto "grafico")
+#' @param tema_grafico Tema de ggplot2: "minimal", "classic", "bw", "light", "dark" (por defecto "minimal")
+#' @param mostrar_datos_boxplot Lógico. Si TRUE, muestra los puntos de datos en el diagrama de cajas
+#' @param mostrar_media_boxplot Lógico. Si TRUE, muestra la media en el diagrama de cajas
+#' @param grid_ncol Número de columnas en la grilla de gráficos (por defecto NULL, automático)
+#' @param formato_salida Formato para devolver: "grafico", "datos" o "ambos" (por defecto "grafico")
 #'
 #' @return Un objeto ggplot2 o una lista con el gráfico y los datos según formato_salida
 #'
@@ -29,25 +31,22 @@
 #' # Datos de ejemplo
 #' datos_ejemplo <- rnorm(100, mean = 50, sd = 10)
 #'
-#' # Primero crear la tabla y luego usar los resultados para los gráficos
-#' resultados_tabla <- tabla_cuantitativa(datos_ejemplo, mostrar_tabla = FALSE)
-#' graficos_cuantitativos(tabla_datos = resultados_tabla$tabla,
-#'                        puntos_corte = resultados_tabla$puntos_corte,
-#'                        grafico = "todos")
+#' # Histograma básico
+#' graficos_cuantitativos(datos_ejemplo)
 #'
-#' # O directamente usar el vector de datos
-#' graficos_cuantitativos(datos_ejemplo, k = 6)  # Histograma por defecto
+#' # Todos los gráficos
+#' graficos_cuantitativos(datos_ejemplo, grafico = "todos")
 #'
 #' # Polígono con barras
 #' graficos_cuantitativos(datos_ejemplo, grafico = "poligono_barras")
 #'
-#' # Diagrama de cajas
-#' graficos_cuantitativos(datos_ejemplo, grafico = "boxplot")
+#' # Diagrama de cajas personalizado
+#' graficos_cuantitativos(datos_ejemplo, grafico = "boxplot",
+#'                       color_grafico = "darkgreen",
+#'                       titulo_grafico = "Distribución de datos")
 #'
-#' # Personalizar título y colores
-#' graficos_cuantitativos(datos_ejemplo, grafico = "todos",
-#'                       color_grafico = "darkblue",
-#'                       titulo_grafico = "Análisis de mi variable")
+#' # Gráfico Q-Q para verificar normalidad
+#' graficos_cuantitativos(datos_ejemplo, grafico = "qqplot")
 #'
 #' @export
 graficos_cuantitativos <- function(datos = NULL,
@@ -68,6 +67,7 @@ graficos_cuantitativos <- function(datos = NULL,
                                    tema_grafico = "minimal",
                                    mostrar_datos_boxplot = TRUE,
                                    mostrar_media_boxplot = TRUE,
+                                   grid_ncol = NULL,
                                    formato_salida = "grafico") {
 
   # Verificar que ggplot2 esté instalado
@@ -76,7 +76,9 @@ graficos_cuantitativos <- function(datos = NULL,
   }
 
   # Validar el tipo de gráfico
-  tipos_graficos_validos <- c("histograma", "poligono", "poligono_barras", "ojiva", "boxplot", "todos")
+  tipos_graficos_validos <- c("histograma", "poligono", "poligono_barras",
+                              "ojiva", "boxplot", "densidad", "qqplot",
+                              "violin", "todos")
   if (!grafico %in% tipos_graficos_validos) {
     stop(paste0("El tipo de gráfico debe ser uno de los siguientes: '",
                 paste(tipos_graficos_validos, collapse = "', '"), "'"))
@@ -130,9 +132,9 @@ graficos_cuantitativos <- function(datos = NULL,
     if (!is.null(datos$metodo)) metodo <- datos$metodo
   }
 
-  # Crear datos originales si solo tenemos tabla de frecuencias y se requiere boxplot
+  # Crear datos originales si solo tenemos tabla de frecuencias
   datos_originales <- NULL
-  if (grafico %in% c("boxplot", "todos") && !is.null(tabla_datos) && is.null(datos)) {
+  if (!is.null(tabla_datos) && is.null(datos)) {
     # Reconstruir aproximadamente los datos originales desde la tabla de frecuencias
     datos_originales <- numeric(0)
     for (i in 1:nrow(tabla_datos)) {
@@ -204,7 +206,6 @@ graficos_cuantitativos <- function(datos = NULL,
     }
 
     graficos$histograma <- p_hist
-    # ✅ FIX: print eliminado de aquí
   }
 
   # ── POLÍGONO DE FRECUENCIAS ───────────────────────────────────────────────────
@@ -231,7 +232,6 @@ graficos_cuantitativos <- function(datos = NULL,
       )
 
     graficos$poligono <- p_pol
-    # ✅ FIX: print eliminado de aquí
   }
 
   # ── POLÍGONO CON BARRAS ───────────────────────────────────────────────────────
@@ -261,7 +261,6 @@ graficos_cuantitativos <- function(datos = NULL,
       )
 
     graficos$poligono_barras <- p_polbar
-    # ✅ FIX: print eliminado de aquí
   }
 
   # ── OJIVA ─────────────────────────────────────────────────────────────────────
@@ -288,16 +287,17 @@ graficos_cuantitativos <- function(datos = NULL,
       )
 
     graficos$ojiva <- p_ojiva
-    # ✅ FIX: print eliminado de aquí
   }
 
+  # ── BOXPLOT ───────────────────────────────────────────────────────────────────
   # ── BOXPLOT ───────────────────────────────────────────────────────────────────
   if (grafico %in% c("boxplot", "todos") && !is.null(datos_originales)) {
     titulo_box <- ifelse(is.null(titulo_grafico),
                          "Diagrama de cajas",
                          paste0(titulo_grafico, " - Diagrama de cajas"))
 
-    p_box <- ggplot2::ggplot(data.frame(valor = datos_originales), ggplot2::aes(y = valor)) +
+    p_box <- ggplot2::ggplot(data.frame(x = "", valor = datos_originales),
+                             ggplot2::aes(x = x, y = valor)) +
       ggplot2::geom_boxplot(fill = color_grafico, alpha = 0.7, width = 0.5) +
       ggplot2::coord_flip() +
       ggplot2::labs(
@@ -318,7 +318,8 @@ graficos_cuantitativos <- function(datos = NULL,
 
     if (mostrar_datos_boxplot) {
       p_box <- p_box +
-        ggplot2::geom_jitter(width = 0.2, height = 0, alpha = 0.5,
+        ggplot2::geom_jitter(ggplot2::aes(x = x, y = valor),  # ← AÑADIR aes() aquí
+                             width = 0.2, height = 0, alpha = 0.5,
                              color = color_secundario, size = 1.5)
     }
 
@@ -338,36 +339,125 @@ graficos_cuantitativos <- function(datos = NULL,
     }
 
     graficos$boxplot <- p_box
-    # ✅ FIX: print eliminado de aquí
+  }
+  # ── GRÁFICO DE DENSIDAD ───────────────────────────────────────────────────────
+  if (grafico %in% c("densidad", "todos") && !is.null(datos_originales)) {
+    titulo_dens <- ifelse(is.null(titulo_grafico),
+                          "Gráfico de densidad",
+                          paste0(titulo_grafico, " - Densidad"))
+
+    p_dens <- ggplot2::ggplot(data.frame(x = datos_originales),
+                              ggplot2::aes(x = x)) +
+      ggplot2::geom_density(fill = color_grafico, alpha = 0.5,
+                            color = color_grafico, linewidth = 1) +
+      ggplot2::labs(
+        title = titulo_dens,
+        subtitle = subtitulo_grafico,
+        caption = caption_grafico,
+        x = ifelse(is.null(eje_x_nombre), "Valor", eje_x_nombre),
+        y = "Densidad"
+      ) +
+      tema +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic")
+      )
+
+    graficos$densidad <- p_dens
   }
 
-  # ── MOSTRAR GRÁFICO(S) — UN SOLO PUNTO DE IMPRESIÓN ──────────────────────────
+  # ── GRÁFICO Q-Q ───────────────────────────────────────────────────────────────
+  if (grafico %in% c("qqplot", "todos") && !is.null(datos_originales)) {
+    titulo_qq <- ifelse(is.null(titulo_grafico),
+                        "Gráfico Q-Q (Normalidad)",
+                        paste0(titulo_grafico, " - Q-Q"))
+
+    p_qq <- ggplot2::ggplot(data.frame(x = datos_originales),
+                            ggplot2::aes(sample = x)) +
+      ggplot2::stat_qq(color = color_grafico, size = 2) +
+      ggplot2::stat_qq_line(color = color_secundario, linewidth = 1) +
+      ggplot2::labs(
+        title = titulo_qq,
+        subtitle = "Los puntos deben seguir la línea si los datos son normales",
+        caption = caption_grafico,
+        x = "Cuantiles teóricos",
+        y = "Cuantiles de la muestra"
+      ) +
+      tema +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5, size = 9),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic")
+      )
+
+    graficos$qqplot <- p_qq
+  }
+
+  # ── DIAGRAMA DE VIOLÍN ────────────────────────────────────────────────────────
+  if (grafico %in% c("violin", "todos") && !is.null(datos_originales)) {
+    titulo_violin <- ifelse(is.null(titulo_grafico),
+                            "Diagrama de violín",
+                            paste0(titulo_grafico, " - Violín"))
+
+    p_violin <- ggplot2::ggplot(data.frame(x = "", valor = datos_originales),
+                                ggplot2::aes(x = x, y = valor)) +
+      ggplot2::geom_violin(fill = color_grafico, alpha = 0.5) +
+      ggplot2::geom_boxplot(width = 0.1, fill = color_secundario, alpha = 0.7) +
+      ggplot2::labs(
+        title = titulo_violin,
+        subtitle = subtitulo_grafico,
+        caption = caption_grafico,
+        y = ifelse(is.null(eje_x_nombre), "Valor", eje_x_nombre),
+        x = NULL
+      ) +
+      tema +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = ggplot2::element_text(hjust = 0.5),
+        plot.caption = ggplot2::element_text(hjust = 0, face = "italic"),
+        axis.text.x = ggplot2::element_blank(),
+        axis.ticks.x = ggplot2::element_blank()
+      )
+
+    graficos$violin <- p_violin
+  }
+
+  # ── MOSTRAR GRÁFICO(S) ────────────────────────────────────────────────────────
   if (mostrar_grafico) {
     if (grafico == "todos") {
       # Mostrar todos juntos con gridExtra si está disponible
       if (requireNamespace("gridExtra", quietly = TRUE)) {
         n_graficos <- length(graficos)
-        if (n_graficos <= 2) {
-          n_cols <- n_graficos; n_rows <- 1
-        } else if (n_graficos <= 4) {
-          n_cols <- 2; n_rows <- ceiling(n_graficos / 2)
+
+        if (is.null(grid_ncol)) {
+          # Lógica automática
+          if (n_graficos <= 2) {
+            n_cols <- n_graficos; n_rows <- 1
+          } else if (n_graficos <= 4) {
+            n_cols <- 2; n_rows <- ceiling(n_graficos / 2)
+          } else {
+            n_cols <- 3; n_rows <- ceiling(n_graficos / 3)
+          }
         } else {
-          n_cols <- 3; n_rows <- ceiling(n_graficos / 3)
+          n_cols <- grid_ncol
+          n_rows <- ceiling(n_graficos / n_cols)
         }
-        grid <- do.call(gridExtra::grid.arrange,
-                        c(graficos,
-                          list(ncol = n_cols,
-                               nrow = n_rows,
-                               top  = ifelse(is.null(titulo_grafico),
-                                             "Análisis gráfico de los datos",
-                                             titulo_grafico))))
-        print(grid)
+
+        # gridExtra::grid.arrange ya imprime automáticamente, NO usar print()
+        do.call(gridExtra::grid.arrange,
+                c(graficos,
+                  list(ncol = n_cols,
+                       nrow = n_rows,
+                       top  = ifelse(is.null(titulo_grafico),
+                                     "Análisis gráfico de los datos",
+                                     titulo_grafico))))
       } else {
         # Sin gridExtra: imprimir uno por uno
         for (g in graficos) print(g)
       }
     } else {
-      # ✅ FIX: UN SOLO print para gráficos individuales
+      # Imprimir solo el gráfico individual solicitado
       print(graficos[[grafico]])
     }
   }
@@ -387,7 +477,7 @@ graficos_cuantitativos <- function(datos = NULL,
       datos_originales = datos_originales
     )))
   } else {
-    # ✅ FIX: invisible() evita que R auto-imprima el objeto al retornarlo
+    # Devolver invisible para evitar auto-impresión
     if (grafico == "todos") {
       return(invisible(graficos))
     } else {

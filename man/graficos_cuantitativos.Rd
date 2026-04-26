@@ -23,6 +23,7 @@ graficos_cuantitativos(
   tema_grafico = "minimal",
   mostrar_datos_boxplot = TRUE,
   mostrar_media_boxplot = TRUE,
+  grid_ncol = NULL,
   formato_salida = "grafico"
 )
 }
@@ -39,11 +40,11 @@ graficos_cuantitativos(
 
 \item{tabla_datos}{Data frame con la tabla de frecuencias (alternativa a datos)}
 
-\item{grafico}{Tipo de gráfico a generar: "histograma", "poligono", "poligono_barras", "ojiva", "boxplot" o "todos" (por defecto "histograma")}
+\item{grafico}{Tipo de gráfico: "histograma", "poligono", "poligono_barras", "ojiva", "boxplot", "densidad", "qqplot", "violin" o "todos"}
 
 \item{color_grafico}{Color principal para los gráficos (por defecto "steelblue")}
 
-\item{color_secundario}{Color secundario para elementos adicionales en los gráficos (por defecto "tomato")}
+\item{color_secundario}{Color secundario para elementos adicionales (por defecto "tomato")}
 
 \item{titulo_grafico}{Título para los gráficos (por defecto NULL, usa un título genérico)}
 
@@ -51,49 +52,49 @@ graficos_cuantitativos(
 
 \item{caption_grafico}{Caption (pie de gráfico) para los gráficos (por defecto NULL)}
 
-\item{eje_x_nombre}{Nombre personalizado para el eje X (por defecto NULL, usa nombres genéricos)}
+\item{eje_x_nombre}{Nombre personalizado para el eje X (por defecto NULL)}
 
-\item{eje_y_nombre}{Nombre personalizado para el eje Y (por defecto NULL, usa nombres genéricos)}
+\item{eje_y_nombre}{Nombre personalizado para el eje Y (por defecto NULL)}
 
 \item{mostrar_grafico}{Lógico. Si TRUE, muestra el gráfico inmediatamente}
 
-\item{tema_grafico}{Tema de ggplot2 a utilizar (por defecto "minimal")}
+\item{tema_grafico}{Tema de ggplot2: "minimal", "classic", "bw", "light", "dark" (por defecto "minimal")}
 
-\item{mostrar_datos_boxplot}{Lógico. Si TRUE, muestra los puntos de datos en el diagrama de cajas (por defecto TRUE)}
+\item{mostrar_datos_boxplot}{Lógico. Si TRUE, muestra los puntos de datos en el diagrama de cajas}
 
-\item{mostrar_media_boxplot}{Lógico. Si TRUE, muestra la media en el diagrama de cajas (por defecto TRUE)}
+\item{mostrar_media_boxplot}{Lógico. Si TRUE, muestra la media en el diagrama de cajas}
 
-\item{formato_salida}{Formato para devolver los resultados: "grafico", "datos" o "ambos" (por defecto "grafico")}
+\item{grid_ncol}{Número de columnas en la grilla de gráficos (por defecto NULL, automático)}
+
+\item{formato_salida}{Formato para devolver: "grafico", "datos" o "ambos" (por defecto "grafico")}
 }
 \value{
 Un objeto ggplot2 o una lista con el gráfico y los datos según formato_salida
 }
 \description{
 Esta función genera gráficos para una variable continua, incluyendo histograma,
-polígono de frecuencias, ojiva (frecuencias acumuladas) y diagrama de cajas.
+polígono de frecuencias, ojiva (frecuencias acumuladas), diagrama de cajas,
+gráfico de densidad, Q-Q plot y diagrama de violín.
 }
 \examples{
 # Datos de ejemplo
 datos_ejemplo <- rnorm(100, mean = 50, sd = 10)
 
-# Primero crear la tabla y luego usar los resultados para los gráficos
-resultados_tabla <- tabla_cuantitativa(datos_ejemplo, mostrar_tabla = FALSE)
-graficos_cuantitativos(tabla_datos = resultados_tabla$tabla,
-                       puntos_corte = resultados_tabla$puntos_corte,
-                       grafico = "todos")
+# Histograma básico
+graficos_cuantitativos(datos_ejemplo)
 
-# O directamente usar el vector de datos
-graficos_cuantitativos(datos_ejemplo, k = 6)  # Histograma por defecto
+# Todos los gráficos
+graficos_cuantitativos(datos_ejemplo, grafico = "todos")
 
 # Polígono con barras
 graficos_cuantitativos(datos_ejemplo, grafico = "poligono_barras")
 
-# Diagrama de cajas
-graficos_cuantitativos(datos_ejemplo, grafico = "boxplot")
+# Diagrama de cajas personalizado
+graficos_cuantitativos(datos_ejemplo, grafico = "boxplot",
+                      color_grafico = "darkgreen",
+                      titulo_grafico = "Distribución de datos")
 
-# Personalizar título y colores
-graficos_cuantitativos(datos_ejemplo, grafico = "todos",
-                      color_grafico = "darkblue",
-                      titulo_grafico = "Análisis de mi variable")
+# Gráfico Q-Q para verificar normalidad
+graficos_cuantitativos(datos_ejemplo, grafico = "qqplot")
 
 }
