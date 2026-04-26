@@ -247,7 +247,7 @@ tabla_cualitativa <- function(datos,
     # Agregar bordes a la tabla si se solicita
     if (mostrar_bordes && formato_tabla == "html") {
       # Determinar número de columnas para agregar bordes
-      num_cols <- if(ordinal) 4 else 2
+      num_cols <- ncol(tabla_final)
 
       # Aplicar bordes entre columnas
       for (i in 1:num_cols) {
