@@ -4,7 +4,12 @@
 #' incluyendo frecuencias absolutas, relativas, acumuladas y marcas de clase.
 #'
 #' @param datos Vector numérico con los datos a analizar
-#' @param k Número de intervalos o clases deseados (por defecto 5)
+#' @param k Número de intervalos o clases deseados. Por defecto \code{NULL}:
+#'   deja que \code{metodo} decida el número de intervalos a partir de los
+#'   datos (regla de Sturges/Freedman-Diaconis/Scott, según corresponda). Si
+#'   se fija \code{k} a mano, ese valor manda y \code{metodo} se ignora
+#'   (salvo que sea \code{"sturges"}, que es el caso de siempre haber usado
+#'   esta función con \code{k} fijo).
 #' @param digitos Número de decimales a mostrar en los resultados (por defecto 2)
 #' @param metodo Método para calcular los breaks ("sturges", "fd", "scott" o "manual")
 #' @param breaks Vector de puntos de corte (solo si metodo="manual")
@@ -48,7 +53,7 @@
 #'
 #' @export
 tabla_cuantitativa <- function(datos,
-                               k = 5,
+                               k = NULL,
                                digitos = 2,
                                metodo = "sturges",
                                breaks = NULL,
@@ -97,15 +102,11 @@ tabla_cuantitativa <- function(datos,
   # Eliminar valores NA
   datos <- datos[!is.na(datos)]
 
-  # Determinar puntos de corte según el método
-  if (metodo == "manual") {
-    puntos_corte <- breaks
-  } else {
-    # Si el usuario especifica k, siempre usar ese valor para el número de intervalos
-    # independientemente del método
-    rango <- range(datos)
-    puntos_corte <- seq(from = rango[1], to = rango[2], length.out = k + 1)
-  }
+  # Determinar puntos de corte según el método (ver .rodas_puntos_corte en
+  # utils-breaks.R -- metodo ahora si determina los intervalos de verdad
+  # cuando no se fija k a mano).
+  puntos_corte <- .rodas_puntos_corte(datos, k = k, metodo = metodo, breaks = breaks)
+  k <- length(puntos_corte) - 1  # k real ya resuelto (por regla automatica o fijado a mano)
 
   # Evitar notación científica
   options(scipen = 999)

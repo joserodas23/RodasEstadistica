@@ -6,7 +6,7 @@
 \usage{
 tabla_frecuencia(
   datos,
-  k = 5,
+  k = NULL,
   digitos = 2,
   metodo = "sturges",
   breaks = NULL,
@@ -27,7 +27,12 @@ tabla_frecuencia(
 \arguments{
 \item{datos}{Vector numérico con los datos a analizar}
 
-\item{k}{Número de intervalos o clases deseados (por defecto 5)}
+\item{k}{Número de intervalos o clases deseados. Por defecto \code{NULL}:
+deja que \code{metodo} decida el número de intervalos a partir de los
+datos (regla de Sturges/Freedman-Diaconis/Scott, según corresponda). Si
+se fija \code{k} a mano, ese valor manda y \code{metodo} se ignora
+(salvo que sea \code{"sturges"}, que es el caso de siempre haber usado
+esta función con \code{k} fijo).}
 
 \item{digitos}{Número de decimales a mostrar en los resultados (por defecto 2)}
 

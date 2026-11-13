@@ -4,7 +4,11 @@
 #' polígono de frecuencias, ojiva (frecuencias acumuladas) y diagrama de cajas.
 #'
 #' @param datos Vector numérico con los datos a analizar o resultado de tabla_cuantitativa
-#' @param k Número de intervalos o clases deseados (por defecto 5, solo si datos es un vector)
+#' @param k Número de intervalos o clases deseados (solo si datos es un vector).
+#'   Por defecto \code{NULL}: deja que \code{metodo} decida el número de
+#'   intervalos a partir de los datos (regla de Sturges/Freedman-Diaconis/
+#'   Scott, según corresponda). Si se fija a mano, ese valor manda y
+#'   \code{metodo} se ignora (salvo que sea \code{"sturges"}).
 #' @param metodo Método para calcular los breaks ("sturges", "fd", "scott" o "manual") (solo si datos es un vector)
 #' @param breaks Vector de puntos de corte (solo si metodo="manual" y datos es un vector)
 #' @param puntos_corte Vector de puntos de corte (alternativa a breaks)
@@ -51,7 +55,7 @@
 #'
 #' @export
 graficos_cuantitativos <- function(datos = NULL,
-                                   k = 5,
+                                   k = NULL,
                                    metodo = "sturges",
                                    breaks = NULL,
                                    puntos_corte = NULL,
@@ -97,17 +101,10 @@ graficos_cuantitativos <- function(datos = NULL,
     # Eliminar valores NA
     datos <- datos[!is.na(datos)]
 
-    # Determinar puntos de corte según el método
-    if (metodo == "manual" && !is.null(breaks)) {
-      puntos_corte <- breaks
-    } else {
-      # Si el usuario especifica k, siempre usar ese valor para el número de intervalos,
-      # pero podemos usar el método como guía inicial
-
-      # Siempre aseguramos exactamente k intervalos
-      rango <- range(datos)
-      puntos_corte <- seq(from = rango[1], to = rango[2], length.out = k + 1)
-    }
+    # Determinar puntos de corte según el método (ver .rodas_puntos_corte en
+    # utils-breaks.R -- metodo ahora si determina los intervalos de verdad
+    # cuando no se fija k a mano).
+    puntos_corte <- .rodas_puntos_corte(datos, k = k, metodo = metodo, breaks = breaks)
 
     # Obtener marcas de clase
     marcas_clase <- hist(datos, breaks = puntos_corte, plot = FALSE)$mids

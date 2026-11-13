@@ -6,7 +6,7 @@
 \usage{
 graficos_cuantitativos(
   datos = NULL,
-  k = 5,
+  k = NULL,
   metodo = "sturges",
   breaks = NULL,
   puntos_corte = NULL,
@@ -29,7 +29,11 @@ graficos_cuantitativos(
 \arguments{
 \item{datos}{Vector numérico con los datos a analizar o resultado de tabla_cuantitativa}
 
-\item{k}{Número de intervalos o clases deseados (por defecto 5, solo si datos es un vector)}
+\item{k}{Número de intervalos o clases deseados (solo si datos es un vector).
+Por defecto \code{NULL}: deja que \code{metodo} decida el número de
+intervalos a partir de los datos (regla de Sturges/Freedman-Diaconis/
+Scott, según corresponda). Si se fija a mano, ese valor manda y
+\code{metodo} se ignora (salvo que sea \code{"sturges"}).}
 
 \item{metodo}{Método para calcular los breaks ("sturges", "fd", "scott" o "manual") (solo si datos es un vector)}
 
